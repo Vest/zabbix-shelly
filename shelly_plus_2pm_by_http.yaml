@@ -261,6 +261,14 @@ zabbix_export:
           tags:
             - tag: component
               value: inventory
+      valuemaps:
+        - uuid: 1e632234a56443adbea8096b1c9a46f7
+          name: 'Shelly boolean'
+          mappings:
+            - value: '0'
+              newvalue: 'No'
+            - value: '1'
+              newvalue: 'Yes'
   triggers:
     - uuid: 9a6c6d0ef6834262b63414c2eac291e9
       expression: 'last(/Shelly Plus 2PM by HTTP/shelly.switch.apower[0])>{$SHELLY.POWER.MAX}'

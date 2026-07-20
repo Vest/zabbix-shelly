@@ -15,6 +15,7 @@ Working notes for authoring importable Zabbix 7.4 template YAML. Source: https:/
 - UUIDs must be exactly **32 lowercase hex chars**, unique across the file. A stray space or extra char = silent-looking parse failure.
 - No tabs anywhere. 2-space indent throughout.
 - Item-level element referencing a value map is `valuemap:` (singular) with `name:`.
+- ✅ **VERIFIED (7.4):** **Value maps do NOT inherit across a template link.** A child/linked template inherits the base's items and triggers, but NOT its `valuemaps`. If a device template's item references a value map (e.g. `Shelly boolean`), that map must be defined in the SAME template — even if the linked base already defines an identical one. Import fails with `Cannot find value map "X" used for item "..."`. Fix: duplicate the value map into each template whose items use it (identical copies are fine; give each its own UUID). This is standard practice in official Zabbix templates.
 - ✅ **VERIFIED (7.4):** **No `/` in template/host names.** A dashboard item widget referencing a template whose name contains a slash (e.g. `Shelly Gen2/3 common`) FAILS import with `Invalid parameter "/1/host": invalid host name.` — Zabbix rejects `/` in the host/template name used in widget `host:` fields (and it's risky in trigger-expression paths too, since `/` delimits the host there). Keep template names slash-free (use `Gen2 Gen3`, not `Gen2/3`). Also avoid `/` in trigger names to be safe.
 
 ---

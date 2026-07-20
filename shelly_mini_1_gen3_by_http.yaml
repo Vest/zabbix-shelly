@@ -87,3 +87,11 @@ zabbix_export:
           tags:
             - tag: component
               value: inventory
+      valuemaps:
+        - uuid: 048a768dbb75408db249bec208b52df2
+          name: 'Shelly boolean'
+          mappings:
+            - value: '0'
+              newvalue: 'No'
+            - value: '1'
+              newvalue: 'Yes'
