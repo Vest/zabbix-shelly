@@ -20,7 +20,7 @@ Each device template links its common base. **Import the matching common base fi
 
 > Battery-powered Shellies (e.g. Flood, H&T, Door/Window) are **not** suited to HTTP polling — they sleep and only wake briefly, so HTTP requests usually time out. Monitor those over MQTT/push or cloud instead; these HTTP templates target mains-powered devices.
 
-**Which to use?** MQTT if your devices publish to a broker (and especially if the Zabbix server cannot reach the device network directly). HTTP if the server/proxy can reach the device over TCP/80 and you prefer polling, or the device has no MQTT configured. For auto-onboarding new devices, see [NETWORK-DISCOVERY.md](NETWORK-DISCOVERY.md) (HTTP only).
+**Which to use?** MQTT if your devices publish to a broker (and especially if the Zabbix server cannot reach the device network directly). HTTP if the server/proxy can reach the device over TCP/80 and you prefer polling, or the device has no MQTT configured. For auto-onboarding new devices, see [docs/NETWORK-DISCOVERY.md](docs/NETWORK-DISCOVERY.md) (HTTP only).
 
 ```mermaid
 flowchart LR
@@ -66,17 +66,17 @@ Trigger: high active power. Includes a power/voltage/energy dashboard.
 
 ## Bulk import (script)
 
-Instead of importing each template by hand, `import_templates.py` imports all of them via the Zabbix API in the correct dependency order (common bases first). Stdlib-only — no `pip install`.
+Instead of importing each template by hand, `scripts/import_templates.py` imports all of them via the Zabbix API in the correct dependency order (common bases first). Stdlib-only — no `pip install`.
 
 1. In Zabbix, create an API token: **Users → API tokens → Create** (for a user with template write permissions). Copy the token.
-2. `cp .env.example .env`, then edit `.env`:
+2. `cp scripts/.env.example scripts/.env`, then edit `scripts/.env`:
    - `ZABBIX_URL` — e.g. `http://zabbix.example.lan` (`/api_jsonrpc.php` is appended automatically)
    - `ZABBIX_TOKEN` — the token from step 1
 3. Run it:
    ```bash
-   python3 import_templates.py
+   python3 scripts/import_templates.py
    ```
-   Add `--insecure` if your frontend is https with a self-signed cert. Use `--dry-run` to preview the order without connecting. You can also pass specific files: `python3 import_templates.py shelly_gen3_common_by_http.yaml shelly_pm_mini_gen3_by_http.yaml`.
+   Add `--insecure` if your frontend is https with a self-signed cert. Use `--dry-run` to preview the order without connecting. You can also pass specific files: `python3 scripts/import_templates.py templates/http/shelly_gen3_common_by_http.yaml templates/http/shelly_pm_mini_gen3_by_http.yaml`.
 
 The script uses `createMissing` + `updateExisting` (never deletes), so it's safe to re-run after editing templates. Each file prints `OK` or `FAIL <reason>`. `.env` is gitignored — the token is never committed.
 
@@ -86,8 +86,8 @@ The script uses `createMissing` + `updateExisting` (never deletes), so it's safe
 
 Prefer the **Bulk import** script above. To import by hand instead: Zabbix frontend → **Data collection → Templates → Import**. **Import the common base first**, then the meter template (the meter template links the base by name, so the base must exist):
 
-1. `shelly_gen3_common_by_mqtt.yaml`
-2. `shelly_pm_mini_gen3_by_mqtt.yaml`
+1. `templates/mqtt/shelly_gen3_common_by_mqtt.yaml`
+2. `templates/mqtt/shelly_pm_mini_gen3_by_mqtt.yaml`
 
 ### 2. Configure the Zabbix agent 2
 
@@ -164,7 +164,7 @@ In the device's MQTT settings: enable MQTT, point it at your broker, and enable 
 
 ### 5. (Optional) Enable host inventory
 
-The templates auto-populate several Zabbix **host inventory** fields, but only if the host's inventory mode is set to **Automatic** — a per-host setting a template cannot force. To enable: **Data collection → Hosts → [host] → Inventory tab → select "Automatic"**. (When onboarding via network discovery, the discovery action can set this automatically with a "Set host inventory mode → Automatic" operation — see [NETWORK-DISCOVERY.md](NETWORK-DISCOVERY.md).)
+The templates auto-populate several Zabbix **host inventory** fields, but only if the host's inventory mode is set to **Automatic** — a per-host setting a template cannot force. To enable: **Data collection → Hosts → [host] → Inventory tab → select "Automatic"**. (When onboarding via network discovery, the discovery action can set this automatically with a "Set host inventory mode → Automatic" operation — see [docs/NETWORK-DISCOVERY.md](docs/NETWORK-DISCOVERY.md).)
 
 Auto-filled fields once Automatic:
 
@@ -185,8 +185,8 @@ Use this path when the Zabbix server (or proxy) can reach the device over TCP/80
 
 **Data collection → Templates → Import.** Import the HTTP common base first, then the device template(s):
 
-1. `shelly_gen3_common_by_http.yaml`
-2. one or more device templates: `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml`, `shelly_plus_2pm_cover_by_http.yaml`, `shelly_plug_s_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml`
+1. `templates/http/shelly_gen3_common_by_http.yaml`
+2. one or more device templates from `templates/http/`: `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml`, `shelly_plus_2pm_cover_by_http.yaml`, `shelly_plug_s_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml`
 
 ### 2. Ensure reachability
 
@@ -208,7 +208,7 @@ Inventory auto-population (MAC/IP/Vendor/Model) works the same as MQTT — set t
 
 ### Auto-onboarding
 
-To auto-create hosts for new devices, see [NETWORK-DISCOVERY.md](NETWORK-DISCOVERY.md).
+To auto-create hosts for new devices, see [docs/NETWORK-DISCOVERY.md](docs/NETWORK-DISCOVERY.md).
 
 ## Verify
 
@@ -223,7 +223,7 @@ For a Shelly not covered here, link the relevant **common base** (MQTT or HTTP) 
 ## Notes
 
 - Target: Zabbix **7.4**. Other versions may need export-schema adjustments.
-- `zabbix-7.4-template-reference.md` documents the template export/import schema and gotchas learned while building this template.
+- `docs/zabbix-7.4-template-reference.md` documents the template export/import schema and gotchas learned while building this template.
 
 ## License
 

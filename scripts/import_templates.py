@@ -27,18 +27,21 @@ import urllib.error
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(HERE)  # scripts/ -> repo root
+TEMPLATES = os.path.join(REPO, "templates")
 
 # Dependency-correct order: each common base BEFORE the device templates that link it.
+# Paths are relative to the templates/ directory.
 DEFAULT_FILES = [
-    "shelly_gen3_common_by_mqtt.yaml",   # MQTT base
-    "shelly_pm_mini_gen3_by_mqtt.yaml",
-    "shelly_mini_1_gen3_by_mqtt.yaml",
-    "shelly_gen3_common_by_http.yaml",   # HTTP base
-    "shelly_mini_1_gen3_by_http.yaml",
-    "shelly_plus_2pm_by_http.yaml",
-    "shelly_plus_2pm_cover_by_http.yaml",
-    "shelly_plug_s_gen3_by_http.yaml",
-    "shelly_pm_mini_gen3_by_http.yaml",
+    "mqtt/shelly_gen3_common_by_mqtt.yaml",   # MQTT base
+    "mqtt/shelly_pm_mini_gen3_by_mqtt.yaml",
+    "mqtt/shelly_mini_1_gen3_by_mqtt.yaml",
+    "http/shelly_gen3_common_by_http.yaml",   # HTTP base
+    "http/shelly_mini_1_gen3_by_http.yaml",
+    "http/shelly_plus_2pm_by_http.yaml",
+    "http/shelly_plus_2pm_cover_by_http.yaml",
+    "http/shelly_plug_s_gen3_by_http.yaml",
+    "http/shelly_pm_mini_gen3_by_http.yaml",
 ]
 
 # Safe, re-runnable rules: create new + update changed, never delete.
@@ -112,9 +115,12 @@ def main():
 
     load_dotenv(os.path.join(HERE, ".env"))
 
-    files = args.files or DEFAULT_FILES
-    # Resolve to absolute paths (relative to the script dir if not absolute).
-    resolved = [f if os.path.isabs(f) else os.path.join(HERE, f) for f in files]
+    if args.files:
+        # Explicit args resolve against the current working directory.
+        resolved = [f if os.path.isabs(f) else os.path.abspath(f) for f in args.files]
+    else:
+        # Default list is relative to the templates/ directory.
+        resolved = [os.path.join(TEMPLATES, f) for f in DEFAULT_FILES]
 
     missing = [f for f in resolved if not os.path.exists(f)]
     if missing:

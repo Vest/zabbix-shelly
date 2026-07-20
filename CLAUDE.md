@@ -6,18 +6,28 @@ Guidance for Claude Code when working in this repository.
 
 A **Zabbix 7.4 template set** for monitoring **Shelly Gen2/Gen3** devices, over **MQTT** or **HTTP**, published for reuse. Config + docs, not application code.
 
-Two transport families, each = a reusable common base + thin device templates that link it:
+Two transport families, each = a reusable common base + thin device templates that link it. Repo layout:
 
-**MQTT** (agent 2 mqtt.get; device publishes to a broker; works across network segmentation):
+```
+templates/mqtt/   MQTT templates
+templates/http/   HTTP templates
+docs/             NETWORK-DISCOVERY.md, zabbix-7.4-template-reference.md
+scripts/          import_templates.py, .env.example
+README.md  CLAUDE.md  LICENSE  .gitignore
+```
+
+**MQTT** (agent 2 mqtt.get; device publishes to a broker; works across network segmentation) — `templates/mqtt/`:
 - `shelly_gen3_common_by_mqtt.yaml` — base `Shelly Gen3 common by MQTT`.
 - `shelly_pm_mini_gen3_by_mqtt.yaml` — PM Mini; links the base.
+- `shelly_mini_1_gen3_by_mqtt.yaml` — Mini 1 relay; links the base.
 
-**HTTP** (Zabbix HTTP agent polling `/rpc/Shelly.GetStatus`; needs server→device TCP/80; no MQTT required):
+**HTTP** (Zabbix HTTP agent polling `/rpc/Shelly.GetStatus`; needs server→device TCP/80; no MQTT required) — `templates/http/`:
 - `shelly_gen3_common_by_http.yaml` — base `Shelly Gen2 Gen3 common by HTTP`.
-- `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml`, `shelly_plug_s_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml` — device templates; each links the HTTP base.
+- `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml` (switch profile), `shelly_plus_2pm_cover_by_http.yaml` (cover profile), `shelly_plug_s_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml` — device templates; each links the HTTP base.
 
-- `NETWORK-DISCOVERY.md` — server-level network-discovery setup (HTTP auto-onboarding). Not a template.
-- `zabbix-7.4-template-reference.md` — export/import schema reference + verified gotchas. **Read before editing template YAML.**
+- `docs/NETWORK-DISCOVERY.md` — server-level network-discovery setup (HTTP auto-onboarding). Not a template.
+- `docs/zabbix-7.4-template-reference.md` — export/import schema reference + verified gotchas. **Read before editing template YAML.**
+- `scripts/import_templates.py` — bulk-imports all templates via the Zabbix API in dependency order (stdlib-only; config from a gitignored `scripts/.env`).
 
 Import order matters: **import the matching common base first** (device templates reference it by name). ALL yaml files share the `Templates/IoT` template-group UUID `9702754414644deba5cb4ed3e9f33594` intentionally — keep it identical everywhere.
 
@@ -60,11 +70,11 @@ Editing the template YAML? These WILL bite if ignored:
 ## Validate before delivering any YAML change
 
 ```python
-import re
+import re, glob
 from collections import Counter
 SHARED_GROUP = '9702754414644deba5cb4ed3e9f33594'  # Templates/IoT — intentionally shared
 allu = []
-for f in ['shelly_gen3_common_by_mqtt.yaml', 'shelly_pm_mini_gen3_by_mqtt.yaml']:
+for f in glob.glob('templates/**/*.yaml', recursive=True):
     txt = open(f).read()
     u = [x.lower() for x in re.findall(r'uuid:\s*([0-9a-f]{32})', txt)]
     assert all(x[12]=='4' and x[16] in '89ab' for x in u), f'{f}: uuid not valid v4'
