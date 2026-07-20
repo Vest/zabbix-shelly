@@ -31,16 +31,27 @@ This guide sets up **Zabbix network discovery** so new Shelly devices on your Io
 
 ## Step 2 — Discovery action
 
-**Alerts → Actions → Discovery actions → Create action**
+**Alerts → Actions → Discovery actions → Create action.** The dialog has two tabs: **Action** (name + conditions) and **Operations**.
 
-- **Conditions:**
-  - Discovery rule = `Shelly devices`
-  - Discovery check = the HTTP check above
-  - Discovery status = Up
-- **Operations:**
-  - Add host
-  - Add to host groups: `Shellies`
-  - Link to template: **one** of the HTTP device templates (e.g. `Shelly PM Mini Gen3 by HTTP`). The device template pulls in `Shelly Gen2/3 common by HTTP`.
+### Action tab
+
+- **Name:** `Shelly devices`
+- **Conditions:** click **Add**. In the *New condition* dialog:
+  - **Type:** `Discovery rule`
+  - **Operator:** `equals`
+  - **Discovery rules:** select `Shelly devices` (the rule from Step 1)
+  - (Optional: add a second condition `Type = Received value`, `contains`, value `"gen":3` — but note the built-in HTTP check does not expose the RPC body, so a value match generally won't work; rely on the discovery-rule condition.)
+- **Enabled:** checked
+
+### Operations tab
+
+At least one operation is required (the Action tab warns *"At least one operation must exist"*). Add operations:
+
+- **Add host**
+- **Add host groups:** `Shellies`
+- **Link templates:** one of the HTTP device templates (e.g. `Shelly PM Mini Gen3 by HTTP`). The device template pulls in `Shelly Gen2/3 common by HTTP` automatically.
+
+> Because the built-in discovery check can't read the device model, a single action links one fixed template to everything it matches. See "The honest limitation" and "Fully automatic" below for handling mixed device types.
 
 ## Step 3 — Per-host macro
 
