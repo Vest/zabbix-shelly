@@ -185,7 +185,8 @@ python3 -c "import urllib.request;print(urllib.request.urlopen('http://<device-i
 - **Host name:** anything (HTTP items don't bind by name like active checks do).
 - **Interfaces:** none required (HTTP agent items use the macro URL). Optionally add an agent interface if you want to reference its IP.
 - **Templates:** link the device template (it pulls in `Shelly Gen2 Gen3 common by HTTP`).
-- **Macros:** set `{$SHELLY.HTTP.HOST}` to the device IP/hostname. If the device has auth enabled (`auth_en:true`), also set `{$SHELLY.HTTP.USER}` / `{$SHELLY.HTTP.PASSWORD}` and switch the master item's `authtype` to `DIGEST`.
+- **Interfaces:** add an agent interface with the device IP — the HTTP items use `{HOST.CONN}`. (Network-discovery-created hosts already have this.)
+- **Macros:** if the device has auth enabled (`auth_en:true`), set `{$SHELLY.HTTP.USER}` / `{$SHELLY.HTTP.PASSWORD}` and switch the master item's `authtype` to `DIGEST`.
 
 Inventory auto-population (MAC/IP/Vendor/Model) works the same as MQTT — set the host Inventory mode to **Automatic**.
 
@@ -197,7 +198,7 @@ To auto-create hosts for new devices, see [NETWORK-DISCOVERY.md](NETWORK-DISCOVE
 
 **Monitoring → Latest data** for the host.
 - **MQTT:** the master items (`PM1: Raw status`, `System: Raw status`) populate first; dependents derive from them. If empty: check the agent reaches the broker, `{$SHELLY.TOPIC}` matches the device's topic, and the host name matches the agent `Hostname=`.
-- **HTTP:** the `Shelly: Raw status (GetStatus)` master populates first; all dependents derive from it. If empty: check the server reaches the device over HTTP and `{$SHELLY.HTTP.HOST}` is set.
+- **HTTP:** the `Shelly: Raw status (GetStatus)` master populates first; all dependents derive from it. If empty: check the server reaches the device over HTTP and the host has an interface with the device IP (the URL uses `{HOST.CONN}`). A blank address makes the URL `http:///rpc/...` → error `Could not resolve host: rpc`.
 
 ## Other Shelly devices
 

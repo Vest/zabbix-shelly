@@ -127,7 +127,7 @@ One `mqtt.get` master item per **topic** (one MQTT subscription). All scalars fr
 - name: 'Shelly: Raw status (GetStatus)'
   type: HTTP_AGENT
   key: 'shelly.http.status'
-  url: '{$SHELLY.HTTP.SCHEME}://{$SHELLY.HTTP.HOST}/rpc/Shelly.GetStatus'
+  url: '{$SHELLY.HTTP.SCHEME}://{HOST.CONN}/rpc/Shelly.GetStatus'
   delay: '1m'
   history: '1h'      # nodata() liveness trigger reads this
   value_type: TEXT
@@ -137,6 +137,7 @@ One `mqtt.get` master item per **topic** (one MQTT subscription). All scalars fr
 - Colon component keys need **bracket JSONPath**: `$["pm1:0"].apower`, `$["switch:0"].output`, `$["switch:1"].temperature.tC`. Dot syntax (`$.pm1:0.apower`) fails on the colon.
 - No LWT "online" item over HTTP — represent liveness with `nodata()` on the master (needs `history` > 0, hence `1h`).
 - Dependent items in a DEVICE template can reference a master (`shelly.http.status`) that lives in the LINKED common template — inheritance resolves it by key.
+- **Use `{HOST.CONN}` for the device address, NOT an empty macro.** Network discovery can't set a user macro (its operations are add-host/group/template/inventory-mode only), but it DOES add an interface with the discovered IP. So `{HOST.CONN}` resolves automatically for discovered hosts. A macro that ships empty expands to `http:///rpc/...`, and Zabbix then parses the first path segment as the host → **`Could not resolve host: rpc`**. Manually created hosts just need an interface with the IP.
 
 ### Agent 2 MQTT named sessions (keep broker/creds off the template)
 Define on the AGENT (`zabbix_agent2.conf`), not in Zabbix:

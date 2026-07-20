@@ -18,7 +18,7 @@ zabbix_export:
         would parse $["cover:0"].{state,apower,current_pos,...}. Only one profile
         is active at a time.
 
-        Import the common base FIRST. Set {$SHELLY.HTTP.HOST} on the host.
+        Import the common base FIRST. Give the host an interface with the device IP (discovery adds it automatically; the item URL uses {HOST.CONN}).
       templates:
         - name: 'Shelly Gen2 Gen3 common by HTTP'
       groups:

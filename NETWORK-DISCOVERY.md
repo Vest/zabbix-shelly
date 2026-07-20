@@ -57,9 +57,9 @@ At least one operation is required (the Action tab warns *"At least one operatio
 
 > Because the built-in discovery check can't read the device model, a single action links one fixed template to everything it matches. See "The honest limitation" and "Fully automatic" below for handling mixed device types.
 
-## Step 3 — Per-host macro
+## Step 3 — Device address (no macro needed)
 
-The linked template needs `{$SHELLY.HTTP.HOST}` = the device IP. Set it so the auto-created host's discovered IP is used. On the created host, set `{$SHELLY.HTTP.HOST}` to the host's discovered IP (or, if you add an agent/SNMP interface, reference it).
+The HTTP template's master item URL uses **`{HOST.CONN}`**, which resolves to the host interface's address — either its **IP** or **DNS name**, depending on the interface's **Connect to** setting. Network discovery creates the host with an agent interface carrying the discovered IP and DNS name, so this works with **no per-host macro**. Set **Connect to = DNS** on the interface to poll by hostname (robust if the DHCP IP changes, given your DNS resolves the `shelly*.example.lan` names); leave it on **IP** to pin the address. Either works — the Shelly responds on both.
 
 ## The honest limitation — mixed device types
 
@@ -80,7 +80,7 @@ For true "device appears → correct template linked", a small external script b
    - `Plus2PM` → `Shelly Plus 2PM by HTTP`
    - `PlugSG3` → `Shelly Plug S Gen3 by HTTP`
    - `MiniPMG3` → `Shelly PM Mini Gen3 by HTTP`
-4. Call the Zabbix API `host.create` (or `host.update`) with the host, group, template, and `{$SHELLY.HTTP.HOST}` macro set to the IP.
+4. Call the Zabbix API `host.create` (or `host.update`) with the host, group, template, and an agent **interface** set to the device IP/DNS (the template URL uses `{HOST.CONN}` — no macro needed).
 5. (For MQTT hosts instead: GET `/rpc/MQTT.GetConfig`; if `enable=true`, set `{$SHELLY.TOPIC}` from `topic_prefix` and link the MQTT template.)
 
 This script is not included here — it needs a Zabbix API token and is environment-specific. Ask if you want it generated.
@@ -90,4 +90,4 @@ This script is not included here — it needs a Zabbix API token and is environm
 After discovery runs (or immediately, for a manually created test host):
 - **Data collection → Hosts** shows the new host, template linked.
 - **Monitoring → Latest data** shows the GetStatus master + dependents populating.
-- If empty: confirm the server reaches the device IP over HTTP, and `{$SHELLY.HTTP.HOST}` is set.
+- If empty: confirm the server reaches the device over HTTP, and the host has an interface with the device IP/DNS (the URL uses `{HOST.CONN}`; a missing interface makes it `http:///rpc/...` → `Could not resolve host: rpc`).

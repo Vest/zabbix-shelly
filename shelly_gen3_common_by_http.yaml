@@ -23,7 +23,9 @@ zabbix_export:
 
         Setup per host:
           1. Link this base (usually pulled in by a device template).
-          2. Set {$SHELLY.HTTP.HOST} to the device IP or hostname.
+          2. Give the host an interface with the device IP. Network-discovery
+             hosts get this automatically; for a manual host, add an agent
+             interface with the IP. The item URL uses {HOST.CONN}.
           3. If the device has auth enabled, set {$SHELLY.HTTP.USER} and
              {$SHELLY.HTTP.PASSWORD} (HTTP digest).
 
@@ -33,9 +35,6 @@ zabbix_export:
       groups:
         - name: Templates/IoT
       macros:
-        - macro: '{$SHELLY.HTTP.HOST}'
-          value: ''
-          description: 'REQUIRED. Device IP or hostname for the local HTTP RPC API (e.g. 192.0.2.10). Set per host or via discovery.'
         - macro: '{$SHELLY.HTTP.SCHEME}'
           value: 'http'
           description: 'http or https for the RPC endpoint.'
@@ -56,14 +55,14 @@ zabbix_export:
           name: 'Shelly: Raw status (GetStatus)'
           type: HTTP_AGENT
           key: 'shelly.http.status'
-          url: '{$SHELLY.HTTP.SCHEME}://{$SHELLY.HTTP.HOST}/rpc/Shelly.GetStatus'
+          url: '{$SHELLY.HTTP.SCHEME}://{HOST.CONN}/rpc/Shelly.GetStatus'
           delay: '1m'
           history: '1h'
           trends: '0'
           value_type: TEXT
           timeout: '10s'
           authtype: NONE
-          description: 'Master item: full JSON from /rpc/Shelly.GetStatus. All dependent items parse fields from this. Keeps 1h history so the no-data trigger (nodata) can evaluate. For devices with auth enabled, switch authtype to DIGEST and set the USER/PASSWORD macros.'
+          description: 'Master item: full JSON from /rpc/Shelly.GetStatus. Uses {HOST.CONN} — the host interface address — so network-discovery-created hosts work with no extra config (discovery adds the interface). For a manually created host, add an interface with the device IP (agent interface is fine). All dependent items parse fields from this. Keeps 1h history so the no-data trigger (nodata) can evaluate. For devices with auth enabled, switch authtype to DIGEST and set the USER/PASSWORD macros.'
           tags:
             - tag: component
               value: raw
