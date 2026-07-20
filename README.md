@@ -148,7 +148,7 @@ In the device's MQTT settings: enable MQTT, point it at your broker, and enable 
 
 ### 5. (Optional) Enable host inventory
 
-The templates auto-populate several Zabbix **host inventory** fields, but only if the host's inventory mode is set to **Automatic** — a per-host setting a template cannot force. To enable: **Data collection → Hosts → [host] → Inventory tab → select "Automatic"**.
+The templates auto-populate several Zabbix **host inventory** fields, but only if the host's inventory mode is set to **Automatic** — a per-host setting a template cannot force. To enable: **Data collection → Hosts → [host] → Inventory tab → select "Automatic"**. (When onboarding via network discovery, the discovery action can set this automatically with a "Set host inventory mode → Automatic" operation — see [NETWORK-DISCOVERY.md](NETWORK-DISCOVERY.md).)
 
 Auto-filled fields once Automatic:
 

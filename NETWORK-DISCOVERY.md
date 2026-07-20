@@ -50,11 +50,12 @@ This guide sets up **Zabbix network discovery** so new Shelly devices on your Io
 
 ### Operations tab
 
-At least one operation is required (the Action tab warns *"At least one operation must exist"*). Add operations:
+At least one operation is required (the Action tab warns *"At least one operation must exist"*). Click **Add** under Operations; each opens *Operation details* with an **Operation** dropdown. Add these (exact dropdown names):
 
 - **Add host**
-- **Add host groups:** `Shellies`
-- **Link templates:** one of the HTTP device templates (e.g. `Shelly PM Mini Gen3 by HTTP`). The device template pulls in `Shelly Gen2/3 common by HTTP` automatically.
+- **Add to host group** → `Shellies`
+- **Link template** → one of the HTTP device templates (e.g. `Shelly PM Mini Gen3 by HTTP`). It pulls in `Shelly Gen2/3 common by HTTP` automatically.
+- **Set host inventory mode** → `Automatic` (optional but recommended — makes the MAC/IP/Vendor/Model items auto-populate host inventory without touching each host by hand).
 
 > Because the built-in discovery check can't read the device model, a single action links one fixed template to everything it matches. See "The honest limitation" and "Fully automatic" below for handling mixed device types.
 
