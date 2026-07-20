@@ -40,8 +40,13 @@ This guide sets up **Zabbix network discovery** so new Shelly devices on your Io
   - **Type:** `Discovery rule`
   - **Operator:** `equals`
   - **Discovery rules:** select `Shelly devices` (the rule from Step 1)
-  - (Optional: add a second condition `Type = Received value`, `contains`, value `"gen":3` — but note the built-in HTTP check does not expose the RPC body, so a value match generally won't work; rely on the discovery-rule condition.)
 - **Enabled:** checked
+
+> There is no way to filter by device model/gen here: the `Received value` condition
+> type only has data for checks that return a value (Zabbix agent, SNMP) — the plain HTTP
+> port check does not capture the response body, so it can't match on `"gen":3` or model.
+> Selecting the right per-device template is handled by the approaches in "The honest
+> limitation" / "Fully automatic" below.
 
 ### Operations tab
 
