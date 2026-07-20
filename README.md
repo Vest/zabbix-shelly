@@ -9,7 +9,7 @@ Two transport families, each a reusable **common base** + thin **device template
 - `Shelly PM Mini Gen3 by MQTT` — PM Mini energy meter (`pm1:0`); links the base.
 
 **HTTP** (Zabbix HTTP agent polling `/rpc/Shelly.GetStatus`; needs server→device reachability; no MQTT required on the device):
-- `Shelly Gen2/3 common by HTTP` — system/WiFi/cloud/MQTT/WebSocket.
+- `Shelly Gen2 Gen3 common by HTTP` — system/WiFi/cloud/MQTT/WebSocket.
 - `Shelly Mini 1 Gen3 by HTTP` — non-metering relay (switch:0, input:0).
 - `Shelly Plus 2PM by HTTP` — two metered switch channels (switch:0/1, **switch** profile).
 - `Shelly Plus 2PM Cover by HTTP` — roller/blind motor (cover:0: state, position, power; **cover** profile).
@@ -184,7 +184,7 @@ python3 -c "import urllib.request;print(urllib.request.urlopen('http://<device-i
 
 - **Host name:** anything (HTTP items don't bind by name like active checks do).
 - **Interfaces:** none required (HTTP agent items use the macro URL). Optionally add an agent interface if you want to reference its IP.
-- **Templates:** link the device template (it pulls in `Shelly Gen2/3 common by HTTP`).
+- **Templates:** link the device template (it pulls in `Shelly Gen2 Gen3 common by HTTP`).
 - **Macros:** set `{$SHELLY.HTTP.HOST}` to the device IP/hostname. If the device has auth enabled (`auth_en:true`), also set `{$SHELLY.HTTP.USER}` / `{$SHELLY.HTTP.PASSWORD}` and switch the master item's `authtype` to `DIGEST`.
 
 Inventory auto-population (MAC/IP/Vendor/Model) works the same as MQTT — set the host Inventory mode to **Automatic**.

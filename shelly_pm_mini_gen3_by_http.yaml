@@ -9,7 +9,7 @@ zabbix_export:
       name: 'Shelly PM Mini Gen3 by HTTP'
       description: |
         Shelly PM Mini Gen3 (S3PM-001PCEU16) — single-channel energy meter,
-        monitored over the local HTTP RPC API. Links "Shelly Gen2/3 common by
+        monitored over the local HTTP RPC API. Links "Shelly Gen2 Gen3 common by
         HTTP"; adds the pm1:0 metering component.
 
         HTTP counterpart of the MQTT template "Shelly PM Mini Gen3 by MQTT".
@@ -18,7 +18,7 @@ zabbix_export:
 
         Import the common base FIRST. Set {$SHELLY.HTTP.HOST} on the host.
       templates:
-        - name: 'Shelly Gen2/3 common by HTTP'
+        - name: 'Shelly Gen2 Gen3 common by HTTP'
       groups:
         - name: Templates/IoT
       macros:

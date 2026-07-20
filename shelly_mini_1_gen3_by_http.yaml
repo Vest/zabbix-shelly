@@ -9,13 +9,13 @@ zabbix_export:
       name: 'Shelly Mini 1 Gen3 by HTTP'
       description: |
         Shelly Mini 1 Gen3 (S3SW-001X8EU) — single-channel NON-metering relay,
-        monitored over the local HTTP RPC API. Links "Shelly Gen2/3 common by
+        monitored over the local HTTP RPC API. Links "Shelly Gen2 Gen3 common by
         HTTP" for system/wifi/cloud/mqtt/ws; adds the switch:0 relay state and
         input:0. This device has NO power metering (no apower/voltage/current).
 
         Import the common base FIRST. Set {$SHELLY.HTTP.HOST} on the host.
       templates:
-        - name: 'Shelly Gen2/3 common by HTTP'
+        - name: 'Shelly Gen2 Gen3 common by HTTP'
       groups:
         - name: Templates/IoT
       macros:

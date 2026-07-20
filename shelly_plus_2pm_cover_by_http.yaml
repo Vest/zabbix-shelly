@@ -9,7 +9,7 @@ zabbix_export:
       name: 'Shelly Plus 2PM Cover by HTTP'
       description: |
         Shelly Plus 2PM (SNSW-102P16EU) in COVER / roller profile, monitored
-        over the local HTTP RPC API. Links "Shelly Gen2/3 common by HTTP"; adds
+        over the local HTTP RPC API. Links "Shelly Gen2 Gen3 common by HTTP"; adds
         the cover:0 component (motor state, position, power metering, temp).
 
         Use this when the device drives a roller shutter / blind / awning /
@@ -19,7 +19,7 @@ zabbix_export:
 
         Import the common base FIRST. Set {$SHELLY.HTTP.HOST} on the host.
       templates:
-        - name: 'Shelly Gen2/3 common by HTTP'
+        - name: 'Shelly Gen2 Gen3 common by HTTP'
       groups:
         - name: Templates/IoT
       macros:

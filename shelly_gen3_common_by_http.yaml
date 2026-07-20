@@ -5,8 +5,8 @@ zabbix_export:
       name: Templates/IoT
   templates:
     - uuid: 654ae99375af413195a533d62127b21f
-      template: 'Shelly Gen2/3 common by HTTP'
-      name: 'Shelly Gen2/3 common by HTTP'
+      template: 'Shelly Gen2 Gen3 common by HTTP'
+      name: 'Shelly Gen2 Gen3 common by HTTP'
       description: |
         Common base template for Shelly Gen2/Gen3 devices monitored over the
         local HTTP RPC API (Zabbix HTTP agent polling /rpc/Shelly.GetStatus).
@@ -359,7 +359,7 @@ zabbix_export:
                     - type: ITEM
                       name: 'itemid'
                       value:
-                        host: 'Shelly Gen2/3 common by HTTP'
+                        host: 'Shelly Gen2 Gen3 common by HTTP'
                         key: 'shelly.sys.uptime'
                     - type: INTEGER
                       name: 'show.1'
@@ -377,7 +377,7 @@ zabbix_export:
                     - type: ITEM
                       name: 'itemid'
                       value:
-                        host: 'Shelly Gen2/3 common by HTTP'
+                        host: 'Shelly Gen2 Gen3 common by HTTP'
                         key: 'shelly.sys.ram_free'
                     - type: INTEGER
                       name: 'show.1'
@@ -435,34 +435,34 @@ zabbix_export:
               newvalue: 'RTC watchdog (core+RTC)'
   triggers:
     - uuid: d136bf7d5f474c368207a15b8fcf7614
-      expression: 'nodata(/Shelly Gen2/3 common by HTTP/shelly.http.status,{$SHELLY.DATA.TIMEOUT})=1'
-      name: 'Shelly: No data / unreachable'
+      expression: 'nodata(/Shelly Gen2 Gen3 common by HTTP/shelly.http.status,{$SHELLY.DATA.TIMEOUT})=1'
+      name: 'Shelly: No data (unreachable)'
       priority: HIGH
       description: 'No GetStatus response within the timeout. Device is powered off, off the network, or HTTP is blocked (check the server->device firewall path).'
     - uuid: 6bfeb144deaa4e6d9ade72556b98691c
-      expression: 'last(/Shelly Gen2/3 common by HTTP/shelly.sys.uptime)<120'
+      expression: 'last(/Shelly Gen2 Gen3 common by HTTP/shelly.sys.uptime)<120'
       name: 'Shelly: Device restarted'
       priority: INFO
       description: 'Uptime dropped below 2 minutes, indicating a recent reboot.'
       manual_close: 'YES'
     - uuid: 71f708f8c5634f80bde0a053425aa227
-      expression: 'last(/Shelly Gen2/3 common by HTTP/shelly.sys.restart_required)=1'
+      expression: 'last(/Shelly Gen2 Gen3 common by HTTP/shelly.sys.restart_required)=1'
       name: 'Shelly: Restart required (config change pending)'
       priority: INFO
       description: 'The device signals a restart is required for a pending configuration change.'
     - uuid: b8e56f0d63f34c4dae4ae9bd130ec2e4
-      expression: 'max(/Shelly Gen2/3 common by HTTP/shelly.wifi.rssi,15m)<{$SHELLY.RSSI.MIN}'
+      expression: 'max(/Shelly Gen2 Gen3 common by HTTP/shelly.wifi.rssi,15m)<{$SHELLY.RSSI.MIN}'
       name: 'Shelly: Weak WiFi signal (<{$SHELLY.RSSI.MIN} dBm)'
       priority: WARNING
       description: 'WiFi RSSI stayed below the threshold for 15m; the device may drop off intermittently.'
     - uuid: 43f6218681654b008913914970c69024
-      expression: 'last(/Shelly Gen2/3 common by HTTP/shelly.cloud.connected)=0'
+      expression: 'last(/Shelly Gen2 Gen3 common by HTTP/shelly.cloud.connected)=0'
       name: 'Shelly: Cloud disconnected'
       priority: INFO
       status: DISABLED
       description: 'Device lost connection to Shelly Cloud. Disabled by default.'
     - uuid: 2500ce8eb44b4005811dffce7eda1704
-      expression: 'last(/Shelly Gen2/3 common by HTTP/shelly.sys.update_available)=1'
+      expression: 'last(/Shelly Gen2 Gen3 common by HTTP/shelly.sys.update_available)=1'
       name: 'Shelly: Firmware update available'
       priority: INFO
       status: DISABLED

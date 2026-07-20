@@ -9,12 +9,12 @@ zabbix_export:
       name: 'Shelly Plug S Gen3 by HTTP'
       description: |
         Shelly Plug S Gen3 (S3PL-00112EU) — single metered smart plug, monitored
-        over the local HTTP RPC API. Links "Shelly Gen2/3 common by HTTP"; adds
+        over the local HTTP RPC API. Links "Shelly Gen2 Gen3 common by HTTP"; adds
         switch:0 (output + power metering + temperature).
 
         Import the common base FIRST. Set {$SHELLY.HTTP.HOST} on the host.
       templates:
-        - name: 'Shelly Gen2/3 common by HTTP'
+        - name: 'Shelly Gen2 Gen3 common by HTTP'
       groups:
         - name: Templates/IoT
       macros:

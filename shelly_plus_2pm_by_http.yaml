@@ -9,7 +9,7 @@ zabbix_export:
       name: 'Shelly Plus 2PM by HTTP'
       description: |
         Shelly Plus 2PM (SNSW-102P16EU) — two metered switch channels,
-        monitored over the local HTTP RPC API. Links "Shelly Gen2/3 common by
+        monitored over the local HTTP RPC API. Links "Shelly Gen2 Gen3 common by
         HTTP"; adds switch:0 and switch:1 (output + power metering + temperature).
 
         PROFILE NOTE: this template covers the SWITCH profile (switch:0/switch:1).
@@ -20,7 +20,7 @@ zabbix_export:
 
         Import the common base FIRST. Set {$SHELLY.HTTP.HOST} on the host.
       templates:
-        - name: 'Shelly Gen2/3 common by HTTP'
+        - name: 'Shelly Gen2 Gen3 common by HTTP'
       groups:
         - name: Templates/IoT
       macros:

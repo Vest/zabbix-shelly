@@ -54,7 +54,7 @@ At least one operation is required (the Action tab warns *"At least one operatio
 
 - **Add host**
 - **Add to host group** → `Shellies`
-- **Link template** → one of the HTTP device templates (e.g. `Shelly PM Mini Gen3 by HTTP`). It pulls in `Shelly Gen2/3 common by HTTP` automatically.
+- **Link template** → one of the HTTP device templates (e.g. `Shelly PM Mini Gen3 by HTTP`). It pulls in `Shelly Gen2 Gen3 common by HTTP` automatically.
 - **Set host inventory mode** → `Automatic` (optional but recommended — makes the MAC/IP/Vendor/Model items auto-populate host inventory without touching each host by hand).
 
 > Because the built-in discovery check can't read the device model, a single action links one fixed template to everything it matches. See "The honest limitation" and "Fully automatic" below for handling mixed device types.
@@ -67,7 +67,7 @@ The linked template needs `{$SHELLY.HTTP.HOST}` = the device IP. Set it so the a
 
 Native network discovery **cannot automatically choose the correct device template** per device, because its HTTP check does not read `model`/`app` from `GetDeviceInfo`. So with a single discovery action you either:
 
-- link **only the common base** (`Shelly Gen2/3 common by HTTP`) automatically, and add the device-specific template by hand once per host (knows model at a glance), **or**
+- link **only the common base** (`Shelly Gen2 Gen3 common by HTTP`) automatically, and add the device-specific template by hand once per host (knows model at a glance), **or**
 - run **separate discovery rules/actions narrowed by IP sub-range** if your device types live in predictable IP blocks, **or**
 - use the fully-automatic script below.
 

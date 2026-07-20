@@ -13,7 +13,7 @@ Two transport families, each = a reusable common base + thin device templates th
 - `shelly_pm_mini_gen3_by_mqtt.yaml` — PM Mini; links the base.
 
 **HTTP** (Zabbix HTTP agent polling `/rpc/Shelly.GetStatus`; needs server→device TCP/80; no MQTT required):
-- `shelly_gen3_common_by_http.yaml` — base `Shelly Gen2/3 common by HTTP`.
+- `shelly_gen3_common_by_http.yaml` — base `Shelly Gen2 Gen3 common by HTTP`.
 - `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml`, `shelly_plug_s_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml` — device templates; each links the HTTP base.
 
 - `NETWORK-DISCOVERY.md` — server-level network-discovery setup (HTTP auto-onboarding). Not a template.
