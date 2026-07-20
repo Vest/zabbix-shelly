@@ -1,0 +1,425 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 9702754414644deba5cb4ed3e9f33594
+      name: Templates/IoT
+  templates:
+    - uuid: 70eea3056edf499b9edd62ac675641fc
+      template: 'Shelly Gen3 common by MQTT'
+      name: 'Shelly Gen3 common by MQTT'
+      description: |
+        Common base template for Shelly Gen3 devices monitored over MQTT via the
+        Zabbix agent 2 MQTT plugin (mqtt.get, active subscribe).
+
+        Covers the device-agnostic status topics every Shelly Gen3 publishes:
+        sys, wifi, cloud, mqtt, ws, and the online (LWT) topic. Link this from a
+        device-specific template (e.g. "Shelly PM Mini Gen3 by MQTT") that adds
+        the device's own metrics (e.g. pm1:0). Verified against a PM Mini Gen3;
+        the sys/wifi/cloud/mqtt topics are shared across the Gen3 line.
+
+        Setup per host (usually inherited via the linking template):
+          1. {$SHELLY.TOPIC} = FULL topic root <mqtt-prefix>/<device-name>,
+             e.g. shelly/shelly-livingroom-pm. Passed verbatim.
+          2. {$SHELLY.SESSION} = agent 2 MQTT session name (default 'shelly');
+             broker URL + creds live on the agent, not here.
+
+        Collection design: one master mqtt.get item per topic; scalar metrics are
+        dependent items parsing the master JSON via JSONPath (one subscription per
+        topic). NOTE: wifi/cloud/mqtt/ws are published on state CHANGE / reboot,
+        not periodically, so those items may be empty until the next change. sys
+        is published periodically when the device's status notification is on.
+      groups:
+        - name: Templates/IoT
+      macros:
+        - macro: '{$SHELLY.SESSION}'
+          value: 'shelly'
+          description: 'Zabbix agent 2 MQTT named session (Plugins.MQTT.Sessions.<name>.*). Broker URL + credentials live on the agent, not here.'
+        - macro: '{$SHELLY.TOPIC}'
+          value: ''
+          description: 'REQUIRED. FULL device MQTT topic root = <mqtt-prefix>/<device-name>, e.g. shelly/shelly-livingroom-pm. Passed verbatim (session Topic is not prepended). Set per host.'
+        - macro: '{$SHELLY.DATA.TIMEOUT}'
+          value: '10m'
+          description: 'No-data window before the device is considered offline (nodata() on the sys topic).'
+        - macro: '{$SHELLY.RSSI.MIN}'
+          value: '-75'
+          description: 'WiFi RSSI (dBm) below which the signal is considered weak. Trigger fires if sustained.'
+      items:
+        - uuid: bfaabad2d5a34e3682f7a9b4beef60c5
+          name: 'System: Raw status (sys)'
+          type: ZABBIX_ACTIVE
+          key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
+          delay: '0'
+          history: '1h'
+          trends: '0'
+          value_type: TEXT
+          description: 'Master item: full JSON payload from status/sys. Keeps 1h history (not 0) because the "No data received" trigger uses nodata() on this item, which requires history.'
+          tags:
+            - tag: component
+              value: raw
+        - uuid: 4c52794fe9dc413e9de181502dee148b
+          name: 'System: Uptime'
+          type: DEPENDENT
+          key: 'shelly.sys.uptime'
+          value_type: UNSIGNED
+          units: s
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.uptime'
+          tags:
+            - tag: component
+              value: system
+        - uuid: 91e5b026bc994ea695cf0a051fa3d960
+          name: 'System: Restart required'
+          type: DEPENDENT
+          key: 'shelly.sys.restart_required'
+          value_type: UNSIGNED
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.restart_required'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: system
+        - uuid: c4727c95855b4d9fb81d53b5864d1fff
+          name: 'System: RAM free'
+          type: DEPENDENT
+          key: 'shelly.sys.ram_free'
+          value_type: UNSIGNED
+          units: B
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.ram_free'
+          tags:
+            - tag: component
+              value: system
+        - uuid: 082846462a6a4b8e8f6653e94b45bc5a
+          name: 'System: Firmware update available'
+          type: DEPENDENT
+          key: 'shelly.sys.update_available'
+          value_type: UNSIGNED
+          description: 'Derived from status/sys available_updates: 1 if a firmware update is pending (object non-empty), else 0.'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var u = JSON.parse(value).available_updates;
+                  return (u && Object.keys(u).length > 0) ? 1 : 0;
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: firmware
+        - uuid: 6fc3a95793274bbebaf7100ae4496bf5
+          name: 'WiFi: Raw status'
+          type: ZABBIX_ACTIVE
+          key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/wifi]'
+          delay: '0'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          description: 'Master item: full JSON payload from status/wifi. Published on change/reboot, not periodically, so dependents may be empty until the next WiFi state change.'
+          tags:
+            - tag: component
+              value: raw
+        - uuid: ee0928cd34784a7fb3557c4506836cd5
+          name: 'WiFi: RSSI'
+          type: DEPENDENT
+          key: 'shelly.wifi.rssi'
+          value_type: FLOAT
+          units: dBm
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/wifi]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.rssi'
+          tags:
+            - tag: component
+              value: network
+        - uuid: 0f7f2c5fa84e48a59c41b84bb16bd498
+          name: 'WiFi: SSID'
+          type: DEPENDENT
+          key: 'shelly.wifi.ssid'
+          value_type: TEXT
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/wifi]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.ssid'
+          tags:
+            - tag: component
+              value: network
+        - uuid: 57d23c54ca584cfaa3a1b08c9bbb99cb
+          name: 'WiFi: IP address'
+          type: DEPENDENT
+          key: 'shelly.wifi.sta_ip'
+          value_type: TEXT
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/wifi]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.sta_ip'
+          tags:
+            - tag: component
+              value: network
+        - uuid: c4099ac8e8704349a56a296f20ea22d6
+          name: 'WiFi: Status'
+          type: DEPENDENT
+          key: 'shelly.wifi.status'
+          value_type: TEXT
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/wifi]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.status'
+          tags:
+            - tag: component
+              value: network
+        - uuid: 54dd5cc830da44b1911b0a30500bc5ec
+          name: 'Cloud: Raw status'
+          type: ZABBIX_ACTIVE
+          key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/cloud]'
+          delay: '0'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          description: 'Master item: full JSON payload from status/cloud, e.g. {"connected":true}. Published only on state CHANGE (not periodic, not retained), so may be empty until the next connect/disconnect event. Expected — not an error.'
+          tags:
+            - tag: component
+              value: raw
+        - uuid: dffabda1bb5c4f6b8d1d65e6f2e5d791
+          name: 'Cloud: Connected'
+          type: DEPENDENT
+          key: 'shelly.cloud.connected'
+          value_type: UNSIGNED
+          description: 'Cloud connectivity (1=connected). Change-only: updates when status/cloud is republished on a state change.'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/cloud]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.connected'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: availability
+        - uuid: 07db89791ca04f0881e6b84ab0316c7b
+          name: 'MQTT: Raw status'
+          type: ZABBIX_ACTIVE
+          key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/mqtt]'
+          delay: '0'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          description: 'Master item: full JSON payload from status/mqtt, e.g. {"connected":true}. Change-only.'
+          tags:
+            - tag: component
+              value: raw
+        - uuid: d2ea91dda7734adca78dc8193e79722d
+          name: 'MQTT: Connected'
+          type: DEPENDENT
+          key: 'shelly.mqtt.connected'
+          value_type: UNSIGNED
+          description: 'Device-to-broker MQTT connectivity (1=connected). Change-only.'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/mqtt]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.connected'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: availability
+        - uuid: b0b7fe8ad4ea43d5b8e2316f29b2850e
+          name: 'WebSocket: Raw status'
+          type: ZABBIX_ACTIVE
+          key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/ws]'
+          delay: '0'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          description: 'Master item: full JSON payload from status/ws, e.g. {"connected":false}. Change-only.'
+          tags:
+            - tag: component
+              value: raw
+        - uuid: 46667a1e393f4888bac8e7b4545e3c6f
+          name: 'WebSocket: Connected'
+          type: DEPENDENT
+          key: 'shelly.ws.connected'
+          value_type: UNSIGNED
+          description: 'Outbound WebSocket connectivity (1=connected). Change-only.'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/ws]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.connected'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: availability
+        - uuid: 52572c9d47a3434093f0f0c7ae473475
+          name: 'Device: Online (LWT)'
+          type: ZABBIX_ACTIVE
+          key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/online]'
+          delay: '0'
+          value_type: UNSIGNED
+          description: 'Last Will / online topic: true when connected, false on unclean disconnect.'
+          preprocessing:
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly online'
+          tags:
+            - tag: component
+              value: availability
+      dashboards:
+        - uuid: fd29f940caa544dfbc8ee8e11d33ab31
+          name: 'Shelly system health'
+          pages:
+            - name: Overview
+              widgets:
+                - type: svggraph
+                  name: 'WiFi RSSI'
+                  x: '0'
+                  y: '0'
+                  width: '36'
+                  height: '5'
+                  fields:
+                    - type: STRING
+                      name: 'ds.0.hosts.0.0'
+                      value: '{HOST.HOST}'
+                    - type: STRING
+                      name: 'ds.0.items.0.0'
+                      value: 'WiFi: RSSI'
+                    - type: INTEGER
+                      name: 'ds.0.color.0'
+                      value: '3'
+                    - type: STRING
+                      name: 'time_period.from'
+                      value: 'now-7d'
+                    - type: STRING
+                      name: 'time_period.to'
+                      value: 'now'
+                - type: item
+                  name: 'Online'
+                  x: '36'
+                  y: '0'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: ITEM
+                      name: 'itemid'
+                      value:
+                        host: 'Shelly Gen3 common by MQTT'
+                        key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/online]'
+                    - type: INTEGER
+                      name: 'show.1'
+                      value: '2'
+                    - type: INTEGER
+                      name: 'show.2'
+                      value: '3'
+                - type: item
+                  name: 'Uptime'
+                  x: '54'
+                  y: '0'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: ITEM
+                      name: 'itemid'
+                      value:
+                        host: 'Shelly Gen3 common by MQTT'
+                        key: 'shelly.sys.uptime'
+                    - type: INTEGER
+                      name: 'show.1'
+                      value: '2'
+                    - type: INTEGER
+                      name: 'show.2'
+                      value: '3'
+      valuemaps:
+        - uuid: f14eeeaeb6f94c5d94d9bc4955b26ffa
+          name: 'Shelly online'
+          mappings:
+            - value: '0'
+              newvalue: 'Offline'
+            - value: '1'
+              newvalue: 'Online'
+        - uuid: 22c68c4016254f5e922d84ad53a20f82
+          name: 'Shelly boolean'
+          mappings:
+            - value: '0'
+              newvalue: 'No'
+            - value: '1'
+              newvalue: 'Yes'
+  triggers:
+    - uuid: 0444647a08004a429dac568c51afaf50
+      expression: 'last(/Shelly Gen3 common by MQTT/mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/online])=0'
+      name: 'Shelly: Device reported offline (LWT)'
+      priority: HIGH
+      description: 'The broker received the device Last-Will message; the Shelly disconnected uncleanly (power loss / crash / network).'
+    - uuid: c8cf63dfdd0f42d9873ed687d45dc646
+      expression: 'nodata(/Shelly Gen3 common by MQTT/mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys],{$SHELLY.DATA.TIMEOUT})=1'
+      name: 'Shelly: No data received'
+      priority: WARNING
+      description: 'No status/sys update within the timeout. Check device power, network, and that MQTT status notification is enabled.'
+    - uuid: 16247156096e4e51af29b69903ad2a61
+      expression: 'last(/Shelly Gen3 common by MQTT/shelly.sys.uptime)<120'
+      name: 'Shelly: Device restarted'
+      priority: INFO
+      description: 'Uptime dropped below 2 minutes, indicating a recent reboot.'
+      manual_close: 'YES'
+    - uuid: ce66c10735ce4592adab6dae0ccd3208
+      expression: 'last(/Shelly Gen3 common by MQTT/shelly.sys.restart_required)=1'
+      name: 'Shelly: Restart required (config change pending)'
+      priority: INFO
+      description: 'The device signals a restart is required for a pending configuration change.'
+    - uuid: d291faaba5e34410807c4577f51e4d38
+      expression: 'max(/Shelly Gen3 common by MQTT/shelly.wifi.rssi,15m)<{$SHELLY.RSSI.MIN}'
+      name: 'Shelly: Weak WiFi signal (<{$SHELLY.RSSI.MIN} dBm)'
+      priority: WARNING
+      description: 'WiFi RSSI stayed below the threshold for 15m; the device may drop off intermittently.'
+    - uuid: baacb00554a84c40a01c9b192a3341d4
+      expression: 'last(/Shelly Gen3 common by MQTT/shelly.cloud.connected)=0'
+      name: 'Shelly: Cloud disconnected'
+      priority: INFO
+      status: DISABLED
+      description: 'Device lost connection to Shelly Cloud. Disabled by default — enable only if you rely on cloud connectivity (local MQTT monitoring does not).'
+    - uuid: ace291b787b446e7a31f57b218c75648
+      expression: 'last(/Shelly Gen3 common by MQTT/shelly.sys.update_available)=1'
+      name: 'Shelly: Firmware update available'
+      priority: INFO
+      status: DISABLED
+      description: 'A firmware update is available for the device. Disabled by default — enable if you want to be notified of pending updates.'

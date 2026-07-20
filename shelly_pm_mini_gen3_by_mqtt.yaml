@@ -1,0 +1,224 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 9702754414644deba5cb4ed3e9f33594
+      name: Templates/IoT
+  templates:
+    - uuid: b47c42c6aa3e4e56a1bf3b46cc0d6f7e
+      template: 'Shelly PM Mini Gen3 by MQTT'
+      name: 'Shelly PM Mini Gen3 by MQTT'
+      description: |
+        Monitors a Shelly PM Mini Gen3 single-channel energy meter over MQTT
+        using the Zabbix agent 2 MQTT plugin (mqtt.get, active subscribe).
+
+        Applies to the Shelly PM Mini Gen3 product line (SSID prefix
+        ShellyPMMiniG3-XXXXXX), including regional SKUs such as S3PM-001PCEU16.
+        All variants publish identical MQTT payloads.
+
+        This template covers the meter-specific pm1:0 topic only. It LINKS
+        "Shelly Gen3 common by MQTT", which provides the device-agnostic sys,
+        wifi, cloud, mqtt, ws and online items/triggers. Import the common
+        template FIRST (or in the same batch) so this link resolves.
+
+        Setup per host:
+          1. Link this template (it pulls in the common base automatically).
+          2. Set macro {$SHELLY.TOPIC} to the FULL device topic root
+             = <mqtt-prefix>/<device-name>, e.g. shelly/shelly-livingroom-pm.
+             Check it against your broker with:
+               mosquitto_sub -h <broker> -t '#' -v
+          3. Set {$SHELLY.SESSION} to the agent 2 MQTT session name
+             (default 'shelly'); the broker URL + credentials are defined on
+             the agent under Plugins.MQTT.Sessions.<name>.*, not here.
+          4. Add host tags: room, floor, appliance, etc.
+
+        Device side: enable "Status notification" in the Shelly MQTT settings
+        (or set an RPC status notify period) so pm1:0 is published periodically,
+        not only on change.
+      templates:
+        - name: 'Shelly Gen3 common by MQTT'
+      groups:
+        - name: Templates/IoT
+      macros:
+        - macro: '{$SHELLY.POWER.MAX}'
+          value: '2000'
+          description: 'High active-power warning threshold, watts. Tune per host as needed.'
+      items:
+        - uuid: 5f3801c67a614fd99dcc5b1288dcc49e
+          name: 'PM1: Raw status (pm1:0)'
+          type: ZABBIX_ACTIVE
+          key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/pm1:0]'
+          delay: '0'
+          history: '1h'
+          trends: '0'
+          value_type: TEXT
+          description: 'Master item: full JSON payload from status/pm1:0. Dependent items parse fields from this. Keeps 1h history for nodata()-style checks. {$SHELLY.SESSION}/{$SHELLY.TOPIC} are inherited from the linked common template.'
+          tags:
+            - tag: component
+              value: raw
+        - uuid: 01ef4739dd7f4c6888b6ed257c7fdeb9
+          name: 'PM1: Active power'
+          type: DEPENDENT
+          key: 'shelly.pm1.apower'
+          value_type: FLOAT
+          units: W
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/pm1:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.apower'
+          tags:
+            - tag: component
+              value: power
+        - uuid: f64eef3b26e2417db36182a0bbc4b1c6
+          name: 'PM1: Voltage'
+          type: DEPENDENT
+          key: 'shelly.pm1.voltage'
+          value_type: FLOAT
+          units: V
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/pm1:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.voltage'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 26fbb8e074b14cf8bf5386ea96395fbb
+          name: 'PM1: Current'
+          type: DEPENDENT
+          key: 'shelly.pm1.current'
+          value_type: FLOAT
+          units: A
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/pm1:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.current'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 97097d07ff3d432daa9176e17c7f54ed
+          name: 'PM1: Frequency'
+          type: DEPENDENT
+          key: 'shelly.pm1.freq'
+          value_type: FLOAT
+          units: Hz
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/pm1:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.freq'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 9c85e62c9e7b4a558a2249bd206d75f3
+          name: 'PM1: Energy total'
+          type: DEPENDENT
+          key: 'shelly.pm1.aenergy.total'
+          value_type: FLOAT
+          units: Wh
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/pm1:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.aenergy.total'
+          tags:
+            - tag: component
+              value: energy
+        - uuid: 2445b9310de54de2a5820a92716bedd7
+          name: 'PM1: Returned energy total'
+          type: DEPENDENT
+          key: 'shelly.pm1.ret_aenergy.total'
+          value_type: FLOAT
+          units: Wh
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/pm1:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.ret_aenergy.total'
+          tags:
+            - tag: component
+              value: energy
+      dashboards:
+        - uuid: 5e6dc6457fc34811b79428d9bb6a4f30
+          name: 'Shelly PM Mini Gen3'
+          pages:
+            - name: Overview
+              widgets:
+                - type: svggraph
+                  name: 'Active power'
+                  x: '0'
+                  y: '0'
+                  width: '36'
+                  height: '5'
+                  fields:
+                    - type: STRING
+                      name: 'ds.0.hosts.0.0'
+                      value: '{HOST.HOST}'
+                    - type: STRING
+                      name: 'ds.0.items.0.0'
+                      value: 'PM1: Active power'
+                    - type: INTEGER
+                      name: 'ds.0.color.0'
+                      value: '1'
+                    - type: INTEGER
+                      name: 'righty'
+                      value: '0'
+                    - type: STRING
+                      name: 'time_period.from'
+                      value: 'now-7d'
+                    - type: STRING
+                      name: 'time_period.to'
+                      value: 'now'
+                - type: svggraph
+                  name: 'Voltage'
+                  x: '0'
+                  y: '5'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: STRING
+                      name: 'ds.0.hosts.0.0'
+                      value: '{HOST.HOST}'
+                    - type: STRING
+                      name: 'ds.0.items.0.0'
+                      value: 'PM1: Voltage'
+                    - type: INTEGER
+                      name: 'ds.0.color.0'
+                      value: '2'
+                    - type: STRING
+                      name: 'time_period.from'
+                      value: 'now-7d'
+                    - type: STRING
+                      name: 'time_period.to'
+                      value: 'now'
+                - type: item
+                  name: 'Energy total'
+                  x: '18'
+                  y: '5'
+                  width: '9'
+                  height: '5'
+                  fields:
+                    - type: ITEM
+                      name: 'itemid'
+                      value:
+                        host: 'Shelly PM Mini Gen3 by MQTT'
+                        key: 'shelly.pm1.aenergy.total'
+                    - type: INTEGER
+                      name: 'show.1'
+                      value: '2'
+                    - type: INTEGER
+                      name: 'show.2'
+                      value: '3'
+  triggers:
+    - uuid: 11f779fcf1c644e9941ab29a26bf6c64
+      expression: 'last(/Shelly PM Mini Gen3 by MQTT/shelly.pm1.apower)>{$SHELLY.POWER.MAX}'
+      name: 'Shelly: High active power draw (>{$SHELLY.POWER.MAX} W)'
+      priority: WARNING
+      description: 'Active power exceeded the configured threshold.'
