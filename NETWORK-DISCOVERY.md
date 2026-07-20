@@ -37,16 +37,14 @@ This guide sets up **Zabbix network discovery** so new Shelly devices on your Io
 
 - **Name:** `Shelly devices`
 - **Conditions:** click **Add**. In the *New condition* dialog:
-  - **Type:** `Discovery rule`
-  - **Operator:** `equals`
-  - **Discovery rules:** select `Shelly devices` (the rule from Step 1)
+  - **Type:** `Discovery rule`, **Operator:** `equals`, **Discovery rules:** select `Shelly devices` (the rule from Step 1)
+  - **Add a second condition to match only Shelly-named devices** (a name-prefix filter): **Type:** `Host name`, **Operator:** `matches`, **value:** `^shelly` (regex). This acts on the **discovered DNS name**, so only devices whose DNS name starts with `shelly` (e.g. `shellyplus2pm-...`, `shelly1minig3-...`) get a host created — everything else that answers on port 80 is ignored. Use `contains` `shelly` for a looser match.
+  - With two conditions, set the **Calculation** to `And/Or` (or `And`) so both must match.
 - **Enabled:** checked
 
-> There is no way to filter by device model/gen here: the `Received value` condition
-> type only has data for checks that return a value (Zabbix agent, SNMP) — the plain HTTP
-> port check does not capture the response body, so it can't match on `"gen":3` or model.
-> Selecting the right per-device template is handled by the approaches in "The honest
-> limitation" / "Fully automatic" below.
+> Requirements for the name filter: your DNS must resolve the device names (e.g. via Dnsmasq/DHCP, which names Shellies `shelly<model>-<mac>`), AND the discovery rule's **Host name** source must be `DNS name` (Step 1). If DNS doesn't resolve them, the discovered name is the IP and `^shelly` won't match — fall back to narrowing the rule's IP range instead.
+
+> There is no way to filter by device model/gen here: the `Received value` condition type only has data for checks that return a value (Zabbix agent, SNMP) — the plain HTTP port check does not capture the response body, so it can't match on `"gen":3` or model. Selecting the right per-device template is handled by the approaches in "The honest limitation" / "Fully automatic" below.
 
 ### Operations tab
 
