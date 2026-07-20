@@ -1,0 +1,101 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 9702754414644deba5cb4ed3e9f33594
+      name: Templates/IoT
+  templates:
+    - uuid: ed193dc87da74e5f9437fe7bf9db480e
+      template: 'Shelly Mini 1 Gen3 by MQTT'
+      name: 'Shelly Mini 1 Gen3 by MQTT'
+      description: |
+        Shelly Mini 1 Gen3 (S3SW-001X8EU) — single-channel NON-metering relay,
+        monitored over MQTT via the Zabbix agent 2 MQTT plugin. Links
+        "Shelly Gen3 common by MQTT" for sys/wifi/cloud/mqtt/ws/online; adds the
+        switch:0 relay state and temperature. NO power metering (no apower/voltage).
+
+        Topics used (in addition to the common base): <root>/status/switch:0.
+        Import the common base FIRST. Set {$SHELLY.SESSION} and {$SHELLY.TOPIC}
+        on the host (see the base template / README).
+      templates:
+        - name: 'Shelly Gen3 common by MQTT'
+      groups:
+        - name: Templates/IoT
+      macros:
+        - macro: '{$SHELLY.MODEL}'
+          value: 'S3SW-001X8EU'
+          description: 'Device model/SKU, fed to host inventory Model.'
+      items:
+        - uuid: 89470e1dbf9b49439738352a253e241c
+          name: 'Switch 0: Raw status'
+          type: ZABBIX_ACTIVE
+          key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          delay: '0'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          description: 'Master item: full JSON from status/switch:0. Dependent items parse fields from this. Published on state change/reboot.'
+          tags:
+            - tag: component
+              value: raw
+        - uuid: f73286b4690c4968941d4783e9471568
+          name: 'Switch 0: Output'
+          type: DEPENDENT
+          key: 'shelly.switch.output[0]'
+          value_type: UNSIGNED
+          description: 'Relay output state (1=on).'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.output'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: switch
+        - uuid: ccedac694cc94edba55ccb0f7432402a
+          name: 'Switch 0: Temperature'
+          type: DEPENDENT
+          key: 'shelly.switch.temperature[0]'
+          value_type: FLOAT
+          units: °C
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.temperature.tC'
+          tags:
+            - tag: component
+              value: temperature
+        - uuid: b18b4045992d40999f96458cff063098
+          name: 'Model'
+          type: DEPENDENT
+          key: 'shelly.model'
+          value_type: CHAR
+          description: 'Constant device model from {$SHELLY.MODEL} — feeds host inventory Model. JS returns the macro value; discards unchanged. Derived off the switch:0 master.'
+          inventory_link: MODEL
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'return "{$SHELLY.MODEL}";'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
+      valuemaps:
+        - uuid: 385befd43573451ca99cbe2f827d2082
+          name: 'Shelly boolean'
+          mappings:
+            - value: '0'
+              newvalue: 'No'
+            - value: '1'
+              newvalue: 'Yes'
