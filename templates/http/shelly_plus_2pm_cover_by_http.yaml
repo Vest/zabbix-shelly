@@ -29,6 +29,9 @@ zabbix_export:
         - macro: '{$SHELLY.POWER.MAX}'
           value: '2500'
           description: 'High active-power warning threshold (motor), watts.'
+        - macro: '{$SHELLY.TEMP.MAX}'
+          value: '80'
+          description: 'Device temperature (°C) above which a high-temperature warning fires.'
       items:
         - uuid: 40889d803f8640299d88a8a49cdf6802
           name: 'Cover 0: State'
@@ -161,3 +164,8 @@ zabbix_export:
       name: 'Shelly 2PM Cover: High motor power (>{$SHELLY.POWER.MAX} W)'
       priority: WARNING
       description: 'Cover motor active power exceeded the threshold (possible obstruction/stall).'
+    - uuid: 93479cd49ad84a3d9e4943018b008f16
+      expression: 'last(/Shelly Plus 2PM Cover by HTTP/shelly.cover.temperature[0])>{$SHELLY.TEMP.MAX}'
+      name: 'Shelly 2PM Cover: High temperature (>{$SHELLY.TEMP.MAX} °C)'
+      priority: WARNING
+      description: 'Device internal temperature exceeded the threshold — possible overheating.'

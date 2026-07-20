@@ -24,6 +24,9 @@ zabbix_export:
         - macro: '{$SHELLY.MODEL}'
           value: 'S3SW-001X8EU'
           description: 'Device model/SKU, fed to host inventory Model.'
+        - macro: '{$SHELLY.TEMP.MAX}'
+          value: '80'
+          description: 'Device temperature (°C) above which a high-temperature warning fires.'
       items:
         - uuid: 89470e1dbf9b49439738352a253e241c
           name: 'Switch 0: Raw status'
@@ -99,3 +102,9 @@ zabbix_export:
               newvalue: 'No'
             - value: '1'
               newvalue: 'Yes'
+  triggers:
+    - uuid: 36faf7f2270643849a326bd9cf8eded7
+      expression: 'last(/Shelly Mini 1 Gen3 by MQTT/shelly.switch.temperature[0])>{$SHELLY.TEMP.MAX}'
+      name: 'Shelly Mini 1: High temperature (>{$SHELLY.TEMP.MAX} °C)'
+      priority: WARNING
+      description: 'Device internal temperature exceeded the threshold — possible overheating.'

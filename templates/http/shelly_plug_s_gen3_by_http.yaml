@@ -24,6 +24,9 @@ zabbix_export:
         - macro: '{$SHELLY.POWER.MAX}'
           value: '2500'
           description: 'High active-power warning threshold, watts.'
+        - macro: '{$SHELLY.TEMP.MAX}'
+          value: '80'
+          description: 'Device temperature (°C) above which a high-temperature warning fires.'
       items:
         - uuid: 7b8fa9f81cb34c4bb80eb1c1ef1fceb7
           name: 'Switch 0: Output'
@@ -151,3 +154,8 @@ zabbix_export:
       name: 'Shelly Plug S: High power draw (>{$SHELLY.POWER.MAX} W)'
       priority: WARNING
       description: 'Active power exceeded the threshold.'
+    - uuid: 7406bb06d62d4ef695e1247efda5e81c
+      expression: 'last(/Shelly Plug S Gen3 by HTTP/shelly.switch.temperature[0])>{$SHELLY.TEMP.MAX}'
+      name: 'Shelly Plug S: High temperature (>{$SHELLY.TEMP.MAX} °C)'
+      priority: WARNING
+      description: 'Device internal temperature exceeded the threshold — possible overheating.'

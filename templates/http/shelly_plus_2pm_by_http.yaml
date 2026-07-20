@@ -30,6 +30,9 @@ zabbix_export:
         - macro: '{$SHELLY.POWER.MAX}'
           value: '2500'
           description: 'High active-power warning threshold per channel, watts.'
+        - macro: '{$SHELLY.TEMP.MAX}'
+          value: '80'
+          description: 'Device temperature (°C) above which a high-temperature warning fires.'
       items:
         - uuid: e6694ce40dda4d639eea599e654e7c56
           name: 'Switch 0: Output'
@@ -280,3 +283,13 @@ zabbix_export:
       name: 'Shelly 2PM: High power on channel 1 (>{$SHELLY.POWER.MAX} W)'
       priority: WARNING
       description: 'Active power on switch:1 exceeded the threshold.'
+    - uuid: 30b669d8a3fd42eeb18c2a4e77017905
+      expression: 'last(/Shelly Plus 2PM by HTTP/shelly.switch.temperature[0])>{$SHELLY.TEMP.MAX}'
+      name: 'Shelly 2PM: High temperature on channel 0 (>{$SHELLY.TEMP.MAX} °C)'
+      priority: WARNING
+      description: 'Device internal temperature (switch:0) exceeded the threshold — possible overheating.'
+    - uuid: f7c2cdd925764454a9eb2cb0cbe66aa6
+      expression: 'last(/Shelly Plus 2PM by HTTP/shelly.switch.temperature[1])>{$SHELLY.TEMP.MAX}'
+      name: 'Shelly 2PM: High temperature on channel 1 (>{$SHELLY.TEMP.MAX} °C)'
+      priority: WARNING
+      description: 'Device internal temperature (switch:1) exceeded the threshold — possible overheating.'

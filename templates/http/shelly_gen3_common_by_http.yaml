@@ -42,8 +42,9 @@ zabbix_export:
           value: ''
           description: 'HTTP digest username, only if the device has authentication enabled (auth_en=true). Blank = no auth.'
         - macro: '{$SHELLY.HTTP.PASSWORD}'
+          type: SECRET_TEXT
           value: ''
-          description: 'HTTP digest password, only if the device has authentication enabled. Blank = no auth.'
+          description: 'HTTP digest password, only if the device has authentication enabled. Blank = no auth. Stored as secret text (masked in the UI).'
         - macro: '{$SHELLY.DATA.TIMEOUT}'
           value: '5m'
           description: 'No-data window before the device is considered unreachable (nodata() on the GetStatus master).'
