@@ -15,14 +15,17 @@ This guide sets up **Zabbix network discovery** so new Shelly devices on your Io
 **Data collection → Discovery → Create discovery rule**
 
 - **Name:** `Shelly devices`
-- **Discovery by:** IP range
-- **IP range:** your IoT range, e.g. `192.0.2.1-254` (use your actual subnet)
+- **Discovery by:** `Server` (or `Proxy` if a proxy sits inside the device VLAN)
+- **IP range:** your IoT range, e.g. `192.0.2.10-200` (use your actual subnet/range, e.g. `192.168.x.10-200`)
 - **Update interval:** `1h`
-- **Checks:** add an **HTTP** check:
+- **Maximum concurrent checks per type:** `Unlimited` (or `One`/`Custom` to throttle scanning if the network is sensitive)
+- **Checks:** click **Add** and add an **HTTP** check:
   - Type: `HTTP`, Port: `80`
   - (Zabbix's HTTP discovery check confirms the port responds. It does **not** parse the RPC body — see the limitation below about per-device template selection.)
-- **Device uniqueness criteria:** IP address (or the HTTP check)
-- **Host name / Visible name:** IP address (rename later, or set from inventory)
+- **Device uniqueness criteria:** `IP address`
+- **Host name:** `DNS name` (recommended — gives readable names from your DNS, e.g. `shellyplus2pm-...`; falls back to `IP address` if no DNS)
+- **Visible name:** `Host name` (or `DNS name` / `IP address`)
+- **Enabled:** checked
 
 > Zabbix's built-in network-discovery HTTP check only tests connectivity, it does not read the JSON. To key decisions off `model`/`gen`/`app`, use the API-script approach in the "Fully automatic" section below.
 
