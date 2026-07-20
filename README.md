@@ -64,11 +64,27 @@ Trigger: high active power. Includes a power/voltage/energy dashboard.
 - An MQTT broker (e.g. Mosquitto) the Shelly publishes to
 - A Shelly PM Mini Gen3 with MQTT enabled
 
+## Bulk import (script)
+
+Instead of importing each template by hand, `import_templates.py` imports all of them via the Zabbix API in the correct dependency order (common bases first). Stdlib-only — no `pip install`.
+
+1. In Zabbix, create an API token: **Users → API tokens → Create** (for a user with template write permissions). Copy the token.
+2. `cp .env.example .env`, then edit `.env`:
+   - `ZABBIX_URL` — e.g. `http://zabbix.example.lan` (`/api_jsonrpc.php` is appended automatically)
+   - `ZABBIX_TOKEN` — the token from step 1
+3. Run it:
+   ```bash
+   python3 import_templates.py
+   ```
+   Add `--insecure` if your frontend is https with a self-signed cert. Use `--dry-run` to preview the order without connecting. You can also pass specific files: `python3 import_templates.py shelly_gen3_common_by_http.yaml shelly_pm_mini_gen3_by_http.yaml`.
+
+The script uses `createMissing` + `updateExisting` (never deletes), so it's safe to re-run after editing templates. Each file prints `OK` or `FAIL <reason>`. `.env` is gitignored — the token is never committed.
+
 ## Installation (MQTT)
 
-### 1. Import the templates
+### 1. Import the templates (manual, per file)
 
-Zabbix frontend → **Data collection → Templates → Import**. **Import the common base first**, then the meter template (the meter template links the base by name, so the base must exist):
+Prefer the **Bulk import** script above. To import by hand instead: Zabbix frontend → **Data collection → Templates → Import**. **Import the common base first**, then the meter template (the meter template links the base by name, so the base must exist):
 
 1. `shelly_gen3_common_by_mqtt.yaml`
 2. `shelly_pm_mini_gen3_by_mqtt.yaml`
