@@ -48,6 +48,9 @@ DEFAULT_FILES = [
 RULES = {
     "template_groups": {"createMissing": True, "updateExisting": True},
     "templates": {"createMissing": True, "updateExisting": True},
+    # REQUIRED so a device template's `templates:` (linked base) block is honored —
+    # without templateLinkage the importer silently drops the link to the common base.
+    "templateLinkage": {"createMissing": True, "deleteMissing": False},
     "items": {"createMissing": True, "updateExisting": True, "deleteMissing": False},
     "triggers": {"createMissing": True, "updateExisting": True, "deleteMissing": False},
     "valueMaps": {"createMissing": True, "updateExisting": True, "deleteMissing": False},
