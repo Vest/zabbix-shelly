@@ -2,6 +2,8 @@
 
 Working notes for authoring importable Zabbix 7.4 template YAML. Source: https://www.zabbix.com/documentation/current/en/manual/xml_export_import/templates Plus **empirical facts verified against a real 7.4 import** (marked ✅ VERIFIED).
 
+> Shelly `sys.reset_reason` codes: the `Shelly reset reason` value map uses Shelly-specific meanings for codes 1,3,4,6,7,8 (4=firmware panic/crash, 7=hardware watchdog, 8=main watchdog — from community reports of Shelly `Sys.GetStatus`) and falls back to the Arduino-ESP32 enum for the rest (5,9–16). Shelly does not publish this enum officially, and the ESP32 table (https://docs.espressif.com/projects/arduino-esp32/en/latest/api/reset_reason.html) disagrees on code 4 (calls it "legacy watchdog"); Shelly meaning preferred where they conflict. Unmapped codes display as the raw number. Treat labels as best-effort.
+
 ---
 
 ## ⚠️ Gotchas verified the hard way (trust these over the docs)

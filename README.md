@@ -125,6 +125,7 @@ zabbix_agent2 -p 2>/dev/null | grep -i mqtt
   | `{$SHELLY.POWER.MAX}` | `2000` | High-power trigger threshold (W). Optional. |
   | `{$SHELLY.DATA.TIMEOUT}` | `10m` | No-data → offline window. Optional. |
   | `{$SHELLY.RSSI.MIN}` | `-75` | Weak-WiFi trigger threshold (dBm). Optional. |
+  | `{$SHELLY.MODEL}` | `S3PM-001PCEU16` | Device model/SKU, fed to host inventory. Override for other regional variants. Optional. |
 
   Find your topic root with: `mosquitto_sub -h broker.example.lan -t '#' -v`
 
@@ -133,6 +134,21 @@ zabbix_agent2 -p 2>/dev/null | grep -i mqtt
 In the device's MQTT settings: enable MQTT, point it at your broker, and enable
 **"Status notification"** (or set an RPC status notify period) so it publishes `pm1:0`
 periodically — not only on change.
+
+### 5. (Optional) Enable host inventory
+
+The templates auto-populate several Zabbix **host inventory** fields, but only if the host's inventory mode is set to **Automatic** — a per-host setting a template cannot force. To enable: **Data collection → Hosts → [host] → Inventory tab → select "Automatic"**.
+
+Auto-filled fields once Automatic:
+
+| Inventory field | Source |
+|---|---|
+| MAC address A | `sys.mac` (live) |
+| Host networks | `wifi.sta_ip` (live) |
+| Vendor | constant `Shelly` |
+| Model | `{$SHELLY.MODEL}` macro |
+
+If inventory mode stays Disabled/Manual, these links are silently ignored — nothing breaks, the values just won't flow into inventory. Values refresh at the item cadence (MAC/Vendor/Model discard-unchanged with a 1-day heartbeat).
 
 ## Verify
 

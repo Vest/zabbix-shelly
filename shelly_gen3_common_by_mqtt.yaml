@@ -105,6 +105,76 @@ zabbix_export:
           tags:
             - tag: component
               value: system
+        - uuid: 97b59bd44cef4f0e8130ecc5df4bb392
+          name: 'System: Filesystem free'
+          type: DEPENDENT
+          key: 'shelly.sys.fs_free'
+          value_type: UNSIGNED
+          units: B
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.fs_free'
+          tags:
+            - tag: component
+              value: system
+        - uuid: 0906dbccc5404be4b84496c87610e857
+          name: 'System: MAC address'
+          type: DEPENDENT
+          key: 'shelly.sys.mac'
+          value_type: CHAR
+          description: 'Device MAC (constant identity). Kept for inventory/asset tracking; auto-populates the host inventory MAC field (set host Inventory mode to Automatic). Discards unchanged values to avoid storing the same string every cycle.'
+          inventory_link: MACADDRESS_A
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.mac'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
+        - uuid: e05c9860361d4652be23312aa9ef7450
+          name: 'System: Vendor'
+          type: DEPENDENT
+          key: 'shelly.sys.vendor'
+          value_type: CHAR
+          description: 'Constant "Shelly" — feeds the host inventory Vendor field (set host Inventory mode to Automatic). Derived off the sys master; the JS ignores the input and returns a fixed string. Discards unchanged so it does not store repeatedly.'
+          inventory_link: VENDOR
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'return "Shelly";'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
+        - uuid: c6b1440707e943ceb599a6f7b8c03d87
+          name: 'System: Last reset reason'
+          type: DEPENDENT
+          key: 'shelly.sys.reset_reason'
+          value_type: UNSIGNED
+          description: 'Reason code for the most recent reset/boot (from status/sys reset_reason).'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.reset_reason'
+          valuemap:
+            name: 'Shelly reset reason'
+          tags:
+            - tag: component
+              value: system
         - uuid: 082846462a6a4b8e8f6653e94b45bc5a
           name: 'System: Firmware update available'
           type: DEPENDENT
@@ -170,6 +240,8 @@ zabbix_export:
           type: DEPENDENT
           key: 'shelly.wifi.sta_ip'
           value_type: TEXT
+          description: 'Station IP address. Auto-populates the host inventory "Host networks" field (set host Inventory mode to Automatic).'
+          inventory_link: HOST_NETWORKS
           master_item:
             key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/wifi]'
           preprocessing:
@@ -384,6 +456,39 @@ zabbix_export:
               newvalue: 'No'
             - value: '1'
               newvalue: 'Yes'
+        - uuid: 1db9009a903a47d0a99a5de62ee8b74c
+          name: 'Shelly reset reason'
+          mappings:
+            - value: '1'
+              newvalue: 'Power-on'
+            - value: '3'
+              newvalue: 'Software reset'
+            - value: '4'
+              newvalue: 'Firmware panic/crash'
+            - value: '5'
+              newvalue: 'Deep-sleep wake'
+            - value: '6'
+              newvalue: 'SDIO reset'
+            - value: '7'
+              newvalue: 'Hardware watchdog'
+            - value: '8'
+              newvalue: 'Main watchdog'
+            - value: '9'
+              newvalue: 'RTC watchdog (core)'
+            - value: '10'
+              newvalue: 'Intrusion reset'
+            - value: '11'
+              newvalue: 'Timer group CPU reset'
+            - value: '12'
+              newvalue: 'Software reset (CPU)'
+            - value: '13'
+              newvalue: 'RTC watchdog (CPU)'
+            - value: '14'
+              newvalue: 'External CPU reset'
+            - value: '15'
+              newvalue: 'Brownout'
+            - value: '16'
+              newvalue: 'RTC watchdog (core+RTC)'
   triggers:
     - uuid: 0444647a08004a429dac568c51afaf50
       expression: 'last(/Shelly Gen3 common by MQTT/mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/online])=0'

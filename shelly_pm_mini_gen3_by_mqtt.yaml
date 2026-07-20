@@ -42,6 +42,9 @@ zabbix_export:
         - macro: '{$SHELLY.POWER.MAX}'
           value: '2000'
           description: 'High active-power warning threshold, watts. Tune per host as needed.'
+        - macro: '{$SHELLY.MODEL}'
+          value: 'S3PM-001PCEU16'
+          description: 'Device model/SKU, fed into the host inventory Model field. Default is the PM Mini Gen3 EU SKU; override per host for other regional variants.'
       items:
         - uuid: 5f3801c67a614fd99dcc5b1288dcc49e
           name: 'PM1: Raw status (pm1:0)'
@@ -145,6 +148,25 @@ zabbix_export:
           tags:
             - tag: component
               value: energy
+        - uuid: eafe98cb6d114b2cbc381403171cd707
+          name: 'PM1: Model'
+          type: DEPENDENT
+          key: 'shelly.model'
+          value_type: CHAR
+          description: 'Constant device model from {$SHELLY.MODEL} — feeds the host inventory Model field (set host Inventory mode to Automatic). Derived off the pm1:0 master; the JS ignores the input and returns the macro value. Discards unchanged so it does not store repeatedly.'
+          inventory_link: MODEL
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/pm1:0]'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'return "{$SHELLY.MODEL}";'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
       dashboards:
         - uuid: 5e6dc6457fc34811b79428d9bb6a4f30
           name: 'Shelly PM Mini Gen3'
