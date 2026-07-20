@@ -59,7 +59,7 @@ At least one operation is required (the Action tab warns *"At least one operatio
 
 ## Step 3 — Device address (no macro needed)
 
-The HTTP template's master item URL uses **`{HOST.CONN}`**, which resolves to the host interface's address — either its **IP** or **DNS name**, depending on the interface's **Connect to** setting. Network discovery creates the host with an agent interface carrying the discovered IP and DNS name, so this works with **no per-host macro**. Set **Connect to = DNS** on the interface to poll by hostname (robust if the DHCP IP changes, given your DNS resolves the `shelly*.example.lan` names); leave it on **IP** to pin the address. Either works — the Shelly responds on both.
+The HTTP template's master item URL uses **`{HOST.CONN}`**, which resolves to the host interface's address — either its **IP** or **DNS name**, depending on the interface's **Connect to** setting. Network discovery creates the host with an agent interface carrying the discovered IP and DNS name, so this works with **no per-host macro**. Set **Connect to = DNS** on the interface to poll by hostname (robust if the DHCP IP changes, given your DNS resolves the device names); leave it on **IP** to pin the address. Either works — the Shelly responds on both.
 
 ## The honest limitation — mixed device types
 
