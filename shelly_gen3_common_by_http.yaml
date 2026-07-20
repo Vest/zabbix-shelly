@@ -1,0 +1,469 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 9702754414644deba5cb4ed3e9f33594
+      name: Templates/IoT
+  templates:
+    - uuid: 654ae99375af413195a533d62127b21f
+      template: 'Shelly Gen2/3 common by HTTP'
+      name: 'Shelly Gen2/3 common by HTTP'
+      description: |
+        Common base template for Shelly Gen2/Gen3 devices monitored over the
+        local HTTP RPC API (Zabbix HTTP agent polling /rpc/Shelly.GetStatus).
+
+        Covers the device-agnostic components every Gen2/3 Shelly reports in
+        Shelly.GetStatus: sys, wifi, cloud, mqtt, ws. Link this from a
+        device-specific template (Mini 1 G3, Plus 2PM, Plug S G3, PM Mini G3)
+        that adds the device's own components (switch/cover/pm1).
+
+        Requires the Zabbix server (or proxy) to reach the device over HTTP
+        (TCP/80). Unlike the MQTT templates, the device does NOT need MQTT
+        configured. Reachability/liveness is detected via nodata() on the
+        master item (there is no MQTT LWT "online" topic over HTTP).
+
+        Setup per host:
+          1. Link this base (usually pulled in by a device template).
+          2. Set {$SHELLY.HTTP.HOST} to the device IP or hostname.
+          3. If the device has auth enabled, set {$SHELLY.HTTP.USER} and
+             {$SHELLY.HTTP.PASSWORD} (HTTP digest).
+
+        Collection design: ONE HTTP agent master item polls Shelly.GetStatus and
+        returns the entire device state in one response; every metric is a
+        dependent item parsing that JSON via JSONPath. One poll feeds all items.
+      groups:
+        - name: Templates/IoT
+      macros:
+        - macro: '{$SHELLY.HTTP.HOST}'
+          value: ''
+          description: 'REQUIRED. Device IP or hostname for the local HTTP RPC API (e.g. 192.0.2.10). Set per host or via discovery.'
+        - macro: '{$SHELLY.HTTP.SCHEME}'
+          value: 'http'
+          description: 'http or https for the RPC endpoint.'
+        - macro: '{$SHELLY.HTTP.USER}'
+          value: ''
+          description: 'HTTP digest username, only if the device has authentication enabled (auth_en=true). Blank = no auth.'
+        - macro: '{$SHELLY.HTTP.PASSWORD}'
+          value: ''
+          description: 'HTTP digest password, only if the device has authentication enabled. Blank = no auth.'
+        - macro: '{$SHELLY.DATA.TIMEOUT}'
+          value: '5m'
+          description: 'No-data window before the device is considered unreachable (nodata() on the GetStatus master).'
+        - macro: '{$SHELLY.RSSI.MIN}'
+          value: '-75'
+          description: 'WiFi RSSI (dBm) below which the signal is considered weak.'
+      items:
+        - uuid: ce09b199f5db4a77ba48e0b5753eff42
+          name: 'Shelly: Raw status (GetStatus)'
+          type: HTTP_AGENT
+          key: 'shelly.http.status'
+          url: '{$SHELLY.HTTP.SCHEME}://{$SHELLY.HTTP.HOST}/rpc/Shelly.GetStatus'
+          delay: '1m'
+          history: '1h'
+          trends: '0'
+          value_type: TEXT
+          timeout: '10s'
+          authtype: NONE
+          description: 'Master item: full JSON from /rpc/Shelly.GetStatus. All dependent items parse fields from this. Keeps 1h history so the no-data trigger (nodata) can evaluate. For devices with auth enabled, switch authtype to DIGEST and set the USER/PASSWORD macros.'
+          tags:
+            - tag: component
+              value: raw
+        - uuid: 4754ca9e0df54fd88309271aca7174ed
+          name: 'System: Uptime'
+          type: DEPENDENT
+          key: 'shelly.sys.uptime'
+          value_type: UNSIGNED
+          units: s
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.sys.uptime'
+          tags:
+            - tag: component
+              value: system
+        - uuid: 84a5545435074b0dafd6ea4d075edcc8
+          name: 'System: Restart required'
+          type: DEPENDENT
+          key: 'shelly.sys.restart_required'
+          value_type: UNSIGNED
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.sys.restart_required'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: system
+        - uuid: ae696502e5a44ad291cda913df30e6d6
+          name: 'System: RAM free'
+          type: DEPENDENT
+          key: 'shelly.sys.ram_free'
+          value_type: UNSIGNED
+          units: B
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.sys.ram_free'
+          tags:
+            - tag: component
+              value: system
+        - uuid: a7f073538fb34336905339f73b1e17e1
+          name: 'System: Filesystem free'
+          type: DEPENDENT
+          key: 'shelly.sys.fs_free'
+          value_type: UNSIGNED
+          units: B
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.sys.fs_free'
+          tags:
+            - tag: component
+              value: system
+        - uuid: 2a6b693dd9ee41aba5f70ccf340e2781
+          name: 'System: MAC address'
+          type: DEPENDENT
+          key: 'shelly.sys.mac'
+          value_type: CHAR
+          description: 'Device MAC (constant identity). Auto-populates host inventory MAC (set host Inventory mode to Automatic). Discards unchanged to avoid storing repeatedly.'
+          inventory_link: MACADDRESS_A
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.sys.mac'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
+        - uuid: 2b3a36c5baee4978a5eb03b447752b0f
+          name: 'System: Last reset reason'
+          type: DEPENDENT
+          key: 'shelly.sys.reset_reason'
+          value_type: UNSIGNED
+          description: 'Reason code for the most recent reset/boot.'
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.sys.reset_reason'
+          valuemap:
+            name: 'Shelly reset reason'
+          tags:
+            - tag: component
+              value: system
+        - uuid: a942038ee61a4999b1c8be897a743bf2
+          name: 'System: Firmware update available'
+          type: DEPENDENT
+          key: 'shelly.sys.update_available'
+          value_type: UNSIGNED
+          description: 'Derived from sys.available_updates: 1 if a firmware update is pending (object non-empty), else 0.'
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var u = JSON.parse(value).sys.available_updates;
+                  return (u && Object.keys(u).length > 0) ? 1 : 0;
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: firmware
+        - uuid: be11d65a4ce74225b8e98bd7090c1f42
+          name: 'System: Vendor'
+          type: DEPENDENT
+          key: 'shelly.sys.vendor'
+          value_type: CHAR
+          description: 'Constant "Shelly" — feeds host inventory Vendor. JS ignores input and returns a fixed string; discards unchanged.'
+          inventory_link: VENDOR
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'return "Shelly";'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
+        - uuid: 5c7d60d804e046dcbd2fb11da63943b0
+          name: 'WiFi: RSSI'
+          type: DEPENDENT
+          key: 'shelly.wifi.rssi'
+          value_type: FLOAT
+          units: dBm
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.wifi.rssi'
+          tags:
+            - tag: component
+              value: network
+        - uuid: e4299d5e802a423089406ebc93499d92
+          name: 'WiFi: SSID'
+          type: DEPENDENT
+          key: 'shelly.wifi.ssid'
+          value_type: TEXT
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.wifi.ssid'
+          tags:
+            - tag: component
+              value: network
+        - uuid: 6280433fff9545e29cfe900087baf323
+          name: 'WiFi: IP address'
+          type: DEPENDENT
+          key: 'shelly.wifi.sta_ip'
+          value_type: TEXT
+          description: 'Station IP. Auto-populates host inventory "Host networks" (set host Inventory mode to Automatic).'
+          inventory_link: HOST_NETWORKS
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.wifi.sta_ip'
+          tags:
+            - tag: component
+              value: network
+        - uuid: ca0200e5ade44fbca739d0699d5ef570
+          name: 'WiFi: Status'
+          type: DEPENDENT
+          key: 'shelly.wifi.status'
+          value_type: TEXT
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.wifi.status'
+          tags:
+            - tag: component
+              value: network
+        - uuid: e90f531cb33b4a34b64b25f36a0da1d2
+          name: 'Cloud: Connected'
+          type: DEPENDENT
+          key: 'shelly.cloud.connected'
+          value_type: UNSIGNED
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.cloud.connected'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: availability
+        - uuid: 6788a02d12d249768f61d64e1d5768bc
+          name: 'MQTT: Connected'
+          type: DEPENDENT
+          key: 'shelly.mqtt.connected'
+          value_type: UNSIGNED
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.mqtt.connected'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: availability
+        - uuid: 028ce18c9e4549c5913ba96100395e3b
+          name: 'WebSocket: Connected'
+          type: DEPENDENT
+          key: 'shelly.ws.connected'
+          value_type: UNSIGNED
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.ws.connected'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: availability
+      dashboards:
+        - uuid: 267f2d241d5541c0af83b09e889bcf13
+          name: 'Shelly system health'
+          pages:
+            - name: Overview
+              widgets:
+                - type: svggraph
+                  name: 'WiFi RSSI'
+                  x: '0'
+                  y: '0'
+                  width: '36'
+                  height: '5'
+                  fields:
+                    - type: STRING
+                      name: 'ds.0.hosts.0.0'
+                      value: '{HOST.HOST}'
+                    - type: STRING
+                      name: 'ds.0.items.0.0'
+                      value: 'WiFi: RSSI'
+                    - type: INTEGER
+                      name: 'ds.0.color.0'
+                      value: '3'
+                    - type: STRING
+                      name: 'time_period.from'
+                      value: 'now-7d'
+                    - type: STRING
+                      name: 'time_period.to'
+                      value: 'now'
+                - type: item
+                  name: 'Uptime'
+                  x: '36'
+                  y: '0'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: ITEM
+                      name: 'itemid'
+                      value:
+                        host: 'Shelly Gen2/3 common by HTTP'
+                        key: 'shelly.sys.uptime'
+                    - type: INTEGER
+                      name: 'show.1'
+                      value: '2'
+                    - type: INTEGER
+                      name: 'show.2'
+                      value: '3'
+                - type: item
+                  name: 'RAM free'
+                  x: '54'
+                  y: '0'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: ITEM
+                      name: 'itemid'
+                      value:
+                        host: 'Shelly Gen2/3 common by HTTP'
+                        key: 'shelly.sys.ram_free'
+                    - type: INTEGER
+                      name: 'show.1'
+                      value: '2'
+                    - type: INTEGER
+                      name: 'show.2'
+                      value: '3'
+      valuemaps:
+        - uuid: c00cbad9242240beb1199ba684d04cc1
+          name: 'Shelly online'
+          mappings:
+            - value: '0'
+              newvalue: 'Offline'
+            - value: '1'
+              newvalue: 'Online'
+        - uuid: 45434a91931741de9f18b48a166582a0
+          name: 'Shelly boolean'
+          mappings:
+            - value: '0'
+              newvalue: 'No'
+            - value: '1'
+              newvalue: 'Yes'
+        - uuid: 27f1489458bf46e0a752a626641c453a
+          name: 'Shelly reset reason'
+          mappings:
+            - value: '1'
+              newvalue: 'Power-on'
+            - value: '3'
+              newvalue: 'Software reset'
+            - value: '4'
+              newvalue: 'Firmware panic/crash'
+            - value: '5'
+              newvalue: 'Deep-sleep wake'
+            - value: '6'
+              newvalue: 'SDIO reset'
+            - value: '7'
+              newvalue: 'Hardware watchdog'
+            - value: '8'
+              newvalue: 'Main watchdog'
+            - value: '9'
+              newvalue: 'RTC watchdog (core)'
+            - value: '10'
+              newvalue: 'Intrusion reset'
+            - value: '11'
+              newvalue: 'Timer group CPU reset'
+            - value: '12'
+              newvalue: 'Software reset (CPU)'
+            - value: '13'
+              newvalue: 'RTC watchdog (CPU)'
+            - value: '14'
+              newvalue: 'External CPU reset'
+            - value: '15'
+              newvalue: 'Brownout'
+            - value: '16'
+              newvalue: 'RTC watchdog (core+RTC)'
+  triggers:
+    - uuid: d136bf7d5f474c368207a15b8fcf7614
+      expression: 'nodata(/Shelly Gen2/3 common by HTTP/shelly.http.status,{$SHELLY.DATA.TIMEOUT})=1'
+      name: 'Shelly: No data / unreachable'
+      priority: HIGH
+      description: 'No GetStatus response within the timeout. Device is powered off, off the network, or HTTP is blocked (check the server->device firewall path).'
+    - uuid: 6bfeb144deaa4e6d9ade72556b98691c
+      expression: 'last(/Shelly Gen2/3 common by HTTP/shelly.sys.uptime)<120'
+      name: 'Shelly: Device restarted'
+      priority: INFO
+      description: 'Uptime dropped below 2 minutes, indicating a recent reboot.'
+      manual_close: 'YES'
+    - uuid: 71f708f8c5634f80bde0a053425aa227
+      expression: 'last(/Shelly Gen2/3 common by HTTP/shelly.sys.restart_required)=1'
+      name: 'Shelly: Restart required (config change pending)'
+      priority: INFO
+      description: 'The device signals a restart is required for a pending configuration change.'
+    - uuid: b8e56f0d63f34c4dae4ae9bd130ec2e4
+      expression: 'max(/Shelly Gen2/3 common by HTTP/shelly.wifi.rssi,15m)<{$SHELLY.RSSI.MIN}'
+      name: 'Shelly: Weak WiFi signal (<{$SHELLY.RSSI.MIN} dBm)'
+      priority: WARNING
+      description: 'WiFi RSSI stayed below the threshold for 15m; the device may drop off intermittently.'
+    - uuid: 43f6218681654b008913914970c69024
+      expression: 'last(/Shelly Gen2/3 common by HTTP/shelly.cloud.connected)=0'
+      name: 'Shelly: Cloud disconnected'
+      priority: INFO
+      status: DISABLED
+      description: 'Device lost connection to Shelly Cloud. Disabled by default.'
+    - uuid: 2500ce8eb44b4005811dffce7eda1704
+      expression: 'last(/Shelly Gen2/3 common by HTTP/shelly.sys.update_available)=1'
+      name: 'Shelly: Firmware update available'
+      priority: INFO
+      status: DISABLED
+      description: 'A firmware update is available. Disabled by default.'

@@ -1,0 +1,163 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 9702754414644deba5cb4ed3e9f33594
+      name: Templates/IoT
+  templates:
+    - uuid: 59d37b0f3da744cea2a6aec31de24b9a
+      template: 'Shelly Plus 2PM Cover by HTTP'
+      name: 'Shelly Plus 2PM Cover by HTTP'
+      description: |
+        Shelly Plus 2PM (SNSW-102P16EU) in COVER / roller profile, monitored
+        over the local HTTP RPC API. Links "Shelly Gen2/3 common by HTTP"; adds
+        the cover:0 component (motor state, position, power metering, temp).
+
+        Use this when the device drives a roller shutter / blind / awning /
+        garage door (both relays ganged as one motor). For the SWITCH profile
+        (two independent on/off channels) use "Shelly Plus 2PM by HTTP" instead.
+        Only one profile is active at a time.
+
+        Import the common base FIRST. Set {$SHELLY.HTTP.HOST} on the host.
+      templates:
+        - name: 'Shelly Gen2/3 common by HTTP'
+      groups:
+        - name: Templates/IoT
+      macros:
+        - macro: '{$SHELLY.MODEL}'
+          value: 'SNSW-102P16EU'
+          description: 'Device model/SKU, fed to host inventory Model.'
+        - macro: '{$SHELLY.POWER.MAX}'
+          value: '2500'
+          description: 'High active-power warning threshold (motor), watts.'
+      items:
+        - uuid: 40889d803f8640299d88a8a49cdf6802
+          name: 'Cover 0: State'
+          type: DEPENDENT
+          key: 'shelly.cover.state[0]'
+          value_type: CHAR
+          description: 'Motor/cover state: open, closed, opening, closing, stopped, calibrating.'
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["cover:0"].state'
+          tags:
+            - tag: component
+              value: cover
+        - uuid: 0e066b32eb824426807873a1031d5b2c
+          name: 'Cover 0: Position'
+          type: DEPENDENT
+          key: 'shelly.cover.current_pos[0]'
+          value_type: FLOAT
+          units: '%'
+          description: 'Current cover position, 0 (closed) to 100 (open). Null/absent until the device is calibrated — then this item populates.'
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["cover:0"].current_pos'
+              error_handler: DISCARD_VALUE
+          tags:
+            - tag: component
+              value: cover
+        - uuid: 3d96a54c21e641c38b28cc94af7a1c21
+          name: 'Cover 0: Active power'
+          type: DEPENDENT
+          key: 'shelly.cover.apower[0]'
+          value_type: FLOAT
+          units: W
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["cover:0"].apower'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 97bc0275ee7c438f8e65a618c58f1e56
+          name: 'Cover 0: Voltage'
+          type: DEPENDENT
+          key: 'shelly.cover.voltage[0]'
+          value_type: FLOAT
+          units: V
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["cover:0"].voltage'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 3bf316182638478eab3dfa4f832e56fb
+          name: 'Cover 0: Current'
+          type: DEPENDENT
+          key: 'shelly.cover.current[0]'
+          value_type: FLOAT
+          units: A
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["cover:0"].current'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 33fa7c44d0f94eb698ce2b9ecbd82208
+          name: 'Cover 0: Energy total'
+          type: DEPENDENT
+          key: 'shelly.cover.aenergy[0]'
+          value_type: FLOAT
+          units: Wh
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["cover:0"].aenergy.total'
+          tags:
+            - tag: component
+              value: energy
+        - uuid: 69e72492d0f149eab4f96f58e9fa0a10
+          name: 'Cover 0: Temperature'
+          type: DEPENDENT
+          key: 'shelly.cover.temperature[0]'
+          value_type: FLOAT
+          units: °C
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["cover:0"].temperature.tC'
+          tags:
+            - tag: component
+              value: temperature
+        - uuid: 1b7ce6459caf45c983d4ffdb16767691
+          name: 'Model'
+          type: DEPENDENT
+          key: 'shelly.model'
+          value_type: CHAR
+          inventory_link: MODEL
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'return "{$SHELLY.MODEL}";'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
+  triggers:
+    - uuid: f59eb761d1d144b29a1d86b253f21c31
+      expression: 'last(/Shelly Plus 2PM Cover by HTTP/shelly.cover.apower[0])>{$SHELLY.POWER.MAX}'
+      name: 'Shelly 2PM Cover: High motor power (>{$SHELLY.POWER.MAX} W)'
+      priority: WARNING
+      description: 'Cover motor active power exceeded the threshold (possible obstruction/stall).'

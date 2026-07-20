@@ -119,6 +119,23 @@ There is **no** schema flag that hard-enforces a mandatory macro. Convention: em
 ### Master/dependent pattern (read once, reuse)
 One `mqtt.get` master item per **topic** (one MQTT subscription). All scalars from that topic = `DEPENDENT` items whose `master_item.key` equals the master's key, each with a `JSONPATH` step. `mqtt.get` subscribes to ONE topic per item, so masters are per-topic; you cannot merge separate topics into one master.
 
+### HTTP agent master (`HTTP_AGENT`) — one poll, whole device
+`Shelly.GetStatus` returns the entire device state in one HTTP response, so the HTTP templates use ONE `HTTP_AGENT` master and make every metric a dependent item off it:
+```yaml
+- name: 'Shelly: Raw status (GetStatus)'
+  type: HTTP_AGENT
+  key: 'shelly.http.status'
+  url: '{$SHELLY.HTTP.SCHEME}://{$SHELLY.HTTP.HOST}/rpc/Shelly.GetStatus'
+  delay: '1m'
+  history: '1h'      # nodata() liveness trigger reads this
+  value_type: TEXT
+  timeout: '10s'
+  authtype: NONE     # DIGEST + {$SHELLY.HTTP.USER}/{$SHELLY.HTTP.PASSWORD} if auth_en
+```
+- Colon component keys need **bracket JSONPath**: `$["pm1:0"].apower`, `$["switch:0"].output`, `$["switch:1"].temperature.tC`. Dot syntax (`$.pm1:0.apower`) fails on the colon.
+- No LWT "online" item over HTTP — represent liveness with `nodata()` on the master (needs `history` > 0, hence `1h`).
+- Dependent items in a DEVICE template can reference a master (`shelly.http.status`) that lives in the LINKED common template — inheritance resolves it by key.
+
 ### Agent 2 MQTT named sessions (keep broker/creds off the template)
 Define on the AGENT (`zabbix_agent2.conf`), not in Zabbix:
 ```ini
@@ -142,9 +159,7 @@ Must be the LAST step (after JSONPATH/BOOL_TO_DECIMAL produce the final value).
 - Breaks `nodata()`: discarded values look like "no data", so nodata()-based triggers misfire.
 - `last()` returns the last *stored* value, which can be misleadingly old.
 - Can mask genuine reporting gaps.
-The history saved on a few low-rate integer items is negligible; the footguns are not. It earns its keep only at LARGE scale / high poll rates. For a handful of home items,
-**just store every value** — simpler and safer. (Decided to remove it from the Shelly
-template on this basis, 2026-07-20.) Never put it on metric items that change every reading (power, voltage) — it hides flatlines.
+The history saved on a few low-rate integer items is negligible; the footguns are not. It earns its keep only at LARGE scale / high poll rates. For a handful of home items, **just store every value** — simpler and safer. (Decided to remove it from the Shelly template on this basis, 2026-07-20.) Never put it on metric items that change every reading (power, voltage) — it hides flatlines.
 
 ## Trigger element (`zabbix_export.triggers[]` — ROOT level, NOT a template child)
 

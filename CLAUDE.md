@@ -4,13 +4,24 @@ Guidance for Claude Code when working in this repository.
 
 ## What this repo is
 
-A **Zabbix 7.4 template set** for monitoring **Shelly Gen3** devices over **MQTT**, published for reuse. Config + docs, not application code. Two templates:
+A **Zabbix 7.4 template set** for monitoring **Shelly Gen2/Gen3** devices, over **MQTT** or **HTTP**, published for reuse. Config + docs, not application code.
 
-- `shelly_gen3_common_by_mqtt.yaml` — **base** template `Shelly Gen3 common by MQTT`: device-agnostic topics (sys, wifi, cloud, mqtt, ws, online). Any Gen3 Shelly can link it.
-- `shelly_pm_mini_gen3_by_mqtt.yaml` — `Shelly PM Mini Gen3 by MQTT`: meter-specific `pm1:0` items; **links the base** via a `templates:` block.
-- `zabbix-7.4-template-reference.md` — a working reference for the Zabbix 7.4 template export/import schema, including gotchas verified against a live import. **Read this before editing the template YAML.**
+Two transport families, each = a reusable common base + thin device templates that link it:
 
-Import order matters: the **base must be imported first** (the PM template references it by name). The two files share the `Templates/IoT` template-group UUID (`9702754414644deba5cb4ed3e9f33594`) intentionally — keep it identical in both.
+**MQTT** (agent 2 mqtt.get; device publishes to a broker; works across network segmentation):
+- `shelly_gen3_common_by_mqtt.yaml` — base `Shelly Gen3 common by MQTT`.
+- `shelly_pm_mini_gen3_by_mqtt.yaml` — PM Mini; links the base.
+
+**HTTP** (Zabbix HTTP agent polling `/rpc/Shelly.GetStatus`; needs server→device TCP/80; no MQTT required):
+- `shelly_gen3_common_by_http.yaml` — base `Shelly Gen2/3 common by HTTP`.
+- `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml`, `shelly_plug_s_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml` — device templates; each links the HTTP base.
+
+- `NETWORK-DISCOVERY.md` — server-level network-discovery setup (HTTP auto-onboarding). Not a template.
+- `zabbix-7.4-template-reference.md` — export/import schema reference + verified gotchas. **Read before editing template YAML.**
+
+Import order matters: **import the matching common base first** (device templates reference it by name). ALL yaml files share the `Templates/IoT` template-group UUID `9702754414644deba5cb4ed3e9f33594` intentionally — keep it identical everywhere.
+
+**MQTT vs HTTP:** MQTT master/dependent is per-topic (one subscription each). HTTP is simpler — ONE `HTTP_AGENT` master polls `Shelly.GetStatus` (entire device state in one response) and every metric is a dependent parsing it; JSONPaths for colon keys use bracket syntax, e.g. `$["pm1:0"].apower`, `$["switch:0"].output`. HTTP has no LWT "online" item — liveness is `nodata()` on the master.
 
 ## Architecture
 

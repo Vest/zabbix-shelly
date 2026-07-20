@@ -499,7 +499,7 @@ zabbix_export:
       expression: 'nodata(/Shelly Gen3 common by MQTT/mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys],{$SHELLY.DATA.TIMEOUT})=1'
       name: 'Shelly: No data received'
       priority: WARNING
-      description: 'No status/sys update within the timeout. Check device power, network, and that MQTT status notification is enabled.'
+      description: 'No status/sys update within {$SHELLY.DATA.TIMEOUT} (default 10m — rides out brief WiFi blips/reboots). Requires the sys master to have history>0 (set to 1h). If this trigger shows an error rather than firing, that history is missing.'
     - uuid: 16247156096e4e51af29b69903ad2a61
       expression: 'last(/Shelly Gen3 common by MQTT/shelly.sys.uptime)<120'
       name: 'Shelly: Device restarted'

@@ -1,18 +1,36 @@
 # zabbix-shelly
 
-A Zabbix 7.4 template set for monitoring **Shelly Gen3** devices over **MQTT**, using the Zabbix **agent 2** MQTT plugin. Ships as two templates:
+Zabbix 7.4 templates for monitoring **Shelly Gen2/Gen3** devices, over **MQTT** or **HTTP**.
 
-- **`Shelly Gen3 common by MQTT`** — reusable base: system, WiFi, cloud, MQTT, WebSocket and online status shared by any Gen3 Shelly.
-- **`Shelly PM Mini Gen3 by MQTT`** — the PM Mini energy-meter metrics (`pm1:0`); links the common base.
+Two transport families, each a reusable **common base** + thin **device templates**:
+
+**MQTT** (Zabbix agent 2 MQTT plugin; device publishes to a broker — works across network segmentation):
+- `Shelly Gen3 common by MQTT` — system/WiFi/cloud/MQTT/WebSocket/online.
+- `Shelly PM Mini Gen3 by MQTT` — PM Mini energy meter (`pm1:0`); links the base.
+
+**HTTP** (Zabbix HTTP agent polling `/rpc/Shelly.GetStatus`; needs server→device reachability; no MQTT required on the device):
+- `Shelly Gen2/3 common by HTTP` — system/WiFi/cloud/MQTT/WebSocket.
+- `Shelly Mini 1 Gen3 by HTTP` — non-metering relay (switch:0, input:0).
+- `Shelly Plus 2PM by HTTP` — two metered switch channels (switch:0/1, **switch** profile).
+- `Shelly Plus 2PM Cover by HTTP` — roller/blind motor (cover:0: state, position, power; **cover** profile).
+- `Shelly Plug S Gen3 by HTTP` — metered smart plug (switch:0).
+- `Shelly PM Mini Gen3 by HTTP` — energy meter (`pm1:0`).
+
+Each device template links its common base. **Import the matching common base first.** The Plus 2PM has two firmware profiles — pick the template matching the device's profile: **switch** (two independent on/off channels) or **cover** (one ganged motor for a shutter/blind). Only one profile is active per device.
+
+> Battery-powered Shellies (e.g. Flood, H&T, Door/Window) are **not** suited to HTTP polling — they sleep and only wake briefly, so HTTP requests usually time out. Monitor those over MQTT/push or cloud instead; these HTTP templates target mains-powered devices.
+
+**Which to use?** MQTT if your devices publish to a broker (and especially if the Zabbix server cannot reach the device network directly). HTTP if the server/proxy can reach the device over TCP/80 and you prefer polling, or the device has no MQTT configured. For auto-onboarding new devices, see [NETWORK-DISCOVERY.md](NETWORK-DISCOVERY.md) (HTTP only).
 
 ```mermaid
 flowchart LR
-    shelly[Shelly Gen3 device] -->|MQTT publish| broker[(Broker<br/>Mosquitto)]
+    shelly[Shelly device] -->|MQTT publish| broker[(Broker<br/>Mosquitto)]
     broker -->|subscribe| agent[Zabbix agent 2<br/>MQTT plugin]
     agent -->|active checks| server[Zabbix server]
+    server -.->|HTTP poll /rpc/Shelly.GetStatus| shelly
 ```
 
-## What it monitors
+## MQTT templates
 
 One master `mqtt.get` item per topic + dependent items parsing JSON via JSONPath (each topic subscribed once).
 
@@ -37,9 +55,7 @@ Triggers: offline, no-data, restarted, restart-required, weak WiFi; cloud-discon
 
 Trigger: high active power. Includes a power/voltage/energy dashboard.
 
-> Note: `wifi`, `cloud`, `mqtt`, `ws` are published on state **change** / reboot (not
-> periodically), so those items may be empty until the next change. `sys` and `pm1:0` are
-> published periodically when the device's status notification is enabled.
+> Note: `wifi`, `cloud`, `mqtt`, `ws` are published on state **change** / reboot (not periodically), so those items may be empty until the next change. `sys` and `pm1:0` are published periodically when the device's status notification is enabled.
 
 ## Requirements
 
@@ -48,7 +64,7 @@ Trigger: high active power. Includes a power/voltage/energy dashboard.
 - An MQTT broker (e.g. Mosquitto) the Shelly publishes to
 - A Shelly PM Mini Gen3 with MQTT enabled
 
-## Installation
+## Installation (MQTT)
 
 ### 1. Import the templates
 
@@ -93,10 +109,7 @@ ServerActive=<zabbix-server>
 
 Add more Shelly hosts by extending the `Hostname=` list, e.g. `Hostname=<this-machine>,shelly-livingroom-pm,shelly-kitchen-pm`, then restart the agent.
 
-> `Server` (passive allow-list) is only needed for local `zabbix_get` testing or passive
-> items — active checks use `ServerActive` only. On Debian, note the machine's own hostname
-> often resolves to `127.0.1.1` (not `127.0.0.1`); if your server listens on `0.0.0.0:10051`
-> this doesn't matter.
+> `Server` (passive allow-list) is only needed for local `zabbix_get` testing or passive items — active checks use `ServerActive` only. On Debian, note the machine's own hostname often resolves to `127.0.1.1` (not `127.0.0.1`); if your server listens on `0.0.0.0:10051` this doesn't matter.
 
 **c) Restart the agent:**
 
@@ -131,9 +144,7 @@ zabbix_agent2 -p 2>/dev/null | grep -i mqtt
 
 ### 4. Configure the Shelly device
 
-In the device's MQTT settings: enable MQTT, point it at your broker, and enable
-**"Status notification"** (or set an RPC status notify period) so it publishes `pm1:0`
-periodically — not only on change.
+In the device's MQTT settings: enable MQTT, point it at your broker, and enable **"Status notification"** (or set an RPC status notify period) so it publishes `pm1:0` periodically — not only on change.
 
 ### 5. (Optional) Enable host inventory
 
@@ -150,14 +161,47 @@ Auto-filled fields once Automatic:
 
 If inventory mode stays Disabled/Manual, these links are silently ignored — nothing breaks, the values just won't flow into inventory. Values refresh at the item cadence (MAC/Vendor/Model discard-unchanged with a 1-day heartbeat).
 
+## Installation (HTTP)
+
+Use this path when the Zabbix server (or proxy) can reach the device over TCP/80. No MQTT or agent MQTT-session needed.
+
+### 1. Import the templates
+
+**Data collection → Templates → Import.** Import the HTTP common base first, then the device template(s):
+
+1. `shelly_gen3_common_by_http.yaml`
+2. one or more device templates: `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml`, `shelly_plus_2pm_cover_by_http.yaml`, `shelly_plug_s_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml`
+
+### 2. Ensure reachability
+
+The Zabbix server/proxy must reach the device on TCP/80. If the device is on an isolated IoT VLAN, open a rule allowing the server to reach that subnet on port 80. Verify from the server:
+
+```bash
+python3 -c "import urllib.request;print(urllib.request.urlopen('http://<device-ip>/rpc/Shelly.GetDeviceInfo',timeout=5).read())"
+```
+
+### 3. Create the host
+
+- **Host name:** anything (HTTP items don't bind by name like active checks do).
+- **Interfaces:** none required (HTTP agent items use the macro URL). Optionally add an agent interface if you want to reference its IP.
+- **Templates:** link the device template (it pulls in `Shelly Gen2/3 common by HTTP`).
+- **Macros:** set `{$SHELLY.HTTP.HOST}` to the device IP/hostname. If the device has auth enabled (`auth_en:true`), also set `{$SHELLY.HTTP.USER}` / `{$SHELLY.HTTP.PASSWORD}` and switch the master item's `authtype` to `DIGEST`.
+
+Inventory auto-population (MAC/IP/Vendor/Model) works the same as MQTT — set the host Inventory mode to **Automatic**.
+
+### Auto-onboarding
+
+To auto-create hosts for new devices, see [NETWORK-DISCOVERY.md](NETWORK-DISCOVERY.md).
+
 ## Verify
 
-**Monitoring → Latest data** for the host. The master items (`PM1: Raw status`,
-`System: Raw status`) should populate first; dependents derive from them. If masters stay empty: check the agent can reach the broker, `{$SHELLY.TOPIC}` matches what the device publishes, and the host name matches the agent `Hostname=`.
+**Monitoring → Latest data** for the host.
+- **MQTT:** the master items (`PM1: Raw status`, `System: Raw status`) populate first; dependents derive from them. If empty: check the agent reaches the broker, `{$SHELLY.TOPIC}` matches the device's topic, and the host name matches the agent `Hostname=`.
+- **HTTP:** the `Shelly: Raw status (GetStatus)` master populates first; all dependents derive from it. If empty: check the server reaches the device over HTTP and `{$SHELLY.HTTP.HOST}` is set.
 
 ## Other Shelly devices
 
-For a non-PM Shelly (e.g. a relay or sensor), you can link **`Shelly Gen3 common by MQTT`** on its own for system/WiFi/cloud/online monitoring, and add a small device-specific template (following the same master/dependent pattern) for that device's own topics.
+For a Shelly not covered here, link the relevant **common base** (MQTT or HTTP) on its own for system/WiFi/cloud monitoring, and add a small device-specific template following the same master/dependent pattern for that device's own components (switch/cover/pm/em/etc.).
 
 ## Notes
 

@@ -1,0 +1,145 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 9702754414644deba5cb4ed3e9f33594
+      name: Templates/IoT
+  templates:
+    - uuid: 9d63d52f39144f318b6effed985be57c
+      template: 'Shelly Plug S Gen3 by HTTP'
+      name: 'Shelly Plug S Gen3 by HTTP'
+      description: |
+        Shelly Plug S Gen3 (S3PL-00112EU) — single metered smart plug, monitored
+        over the local HTTP RPC API. Links "Shelly Gen2/3 common by HTTP"; adds
+        switch:0 (output + power metering + temperature).
+
+        Import the common base FIRST. Set {$SHELLY.HTTP.HOST} on the host.
+      templates:
+        - name: 'Shelly Gen2/3 common by HTTP'
+      groups:
+        - name: Templates/IoT
+      macros:
+        - macro: '{$SHELLY.MODEL}'
+          value: 'S3PL-00112EU'
+          description: 'Device model/SKU, fed to host inventory Model.'
+        - macro: '{$SHELLY.POWER.MAX}'
+          value: '2500'
+          description: 'High active-power warning threshold, watts.'
+      items:
+        - uuid: 7b8fa9f81cb34c4bb80eb1c1ef1fceb7
+          name: 'Switch 0: Output'
+          type: DEPENDENT
+          key: 'shelly.switch.output[0]'
+          value_type: UNSIGNED
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["switch:0"].output'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: switch
+        - uuid: d11e6b8e08204cb79cbd3728144e983f
+          name: 'Switch 0: Active power'
+          type: DEPENDENT
+          key: 'shelly.switch.apower[0]'
+          value_type: FLOAT
+          units: W
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["switch:0"].apower'
+          tags:
+            - tag: component
+              value: power
+        - uuid: d49798179ea2404cbb4ce3a1e17805a8
+          name: 'Switch 0: Voltage'
+          type: DEPENDENT
+          key: 'shelly.switch.voltage[0]'
+          value_type: FLOAT
+          units: V
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["switch:0"].voltage'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 97afb51db8d7498abf192b650dde3504
+          name: 'Switch 0: Current'
+          type: DEPENDENT
+          key: 'shelly.switch.current[0]'
+          value_type: FLOAT
+          units: A
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["switch:0"].current'
+          tags:
+            - tag: component
+              value: power
+        - uuid: a36d647b090548b5961d98ad3f1da8e2
+          name: 'Switch 0: Energy total'
+          type: DEPENDENT
+          key: 'shelly.switch.aenergy[0]'
+          value_type: FLOAT
+          units: Wh
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["switch:0"].aenergy.total'
+          tags:
+            - tag: component
+              value: energy
+        - uuid: ddf2e27ce0c24bc28102aa59564eb9db
+          name: 'Switch 0: Temperature'
+          type: DEPENDENT
+          key: 'shelly.switch.temperature[0]'
+          value_type: FLOAT
+          units: °C
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["switch:0"].temperature.tC'
+          tags:
+            - tag: component
+              value: temperature
+        - uuid: 25f8fc834a4f4a999df905eae195fb90
+          name: 'Model'
+          type: DEPENDENT
+          key: 'shelly.model'
+          value_type: CHAR
+          inventory_link: MODEL
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'return "{$SHELLY.MODEL}";'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
+  triggers:
+    - uuid: 56c2c888a6da4290a47451b420f4a2ec
+      expression: 'last(/Shelly Plug S Gen3 by HTTP/shelly.switch.apower[0])>{$SHELLY.POWER.MAX}'
+      name: 'Shelly Plug S: High power draw (>{$SHELLY.POWER.MAX} W)'
+      priority: WARNING
+      description: 'Active power exceeded the threshold.'

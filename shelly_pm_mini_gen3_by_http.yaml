@@ -1,0 +1,145 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 9702754414644deba5cb4ed3e9f33594
+      name: Templates/IoT
+  templates:
+    - uuid: 0bf8fce47cb644a7b1dee0c8a479abcf
+      template: 'Shelly PM Mini Gen3 by HTTP'
+      name: 'Shelly PM Mini Gen3 by HTTP'
+      description: |
+        Shelly PM Mini Gen3 (S3PM-001PCEU16) — single-channel energy meter,
+        monitored over the local HTTP RPC API. Links "Shelly Gen2/3 common by
+        HTTP"; adds the pm1:0 metering component.
+
+        HTTP counterpart of the MQTT template "Shelly PM Mini Gen3 by MQTT".
+        Use HTTP when the device is reachable from the Zabbix server/proxy and
+        you prefer polling; use MQTT when the device publishes to a broker.
+
+        Import the common base FIRST. Set {$SHELLY.HTTP.HOST} on the host.
+      templates:
+        - name: 'Shelly Gen2/3 common by HTTP'
+      groups:
+        - name: Templates/IoT
+      macros:
+        - macro: '{$SHELLY.MODEL}'
+          value: 'S3PM-001PCEU16'
+          description: 'Device model/SKU, fed to host inventory Model.'
+        - macro: '{$SHELLY.POWER.MAX}'
+          value: '2000'
+          description: 'High active-power warning threshold, watts.'
+      items:
+        - uuid: b5bd3ed319914cc58efd6a61909b9539
+          name: 'PM1: Active power'
+          type: DEPENDENT
+          key: 'shelly.pm1.apower'
+          value_type: FLOAT
+          units: W
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["pm1:0"].apower'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 5e91ab4fbaf5442c8bfda4c47d85b4f6
+          name: 'PM1: Voltage'
+          type: DEPENDENT
+          key: 'shelly.pm1.voltage'
+          value_type: FLOAT
+          units: V
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["pm1:0"].voltage'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 99ab7e0449df474eb114202410adf4b5
+          name: 'PM1: Current'
+          type: DEPENDENT
+          key: 'shelly.pm1.current'
+          value_type: FLOAT
+          units: A
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["pm1:0"].current'
+          tags:
+            - tag: component
+              value: power
+        - uuid: f21338aa7729418f835b1e9610b45299
+          name: 'PM1: Frequency'
+          type: DEPENDENT
+          key: 'shelly.pm1.freq'
+          value_type: FLOAT
+          units: Hz
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["pm1:0"].freq'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 1a40cf9fdd3c41d7abe6095da7e21c0e
+          name: 'PM1: Energy total'
+          type: DEPENDENT
+          key: 'shelly.pm1.aenergy.total'
+          value_type: FLOAT
+          units: Wh
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["pm1:0"].aenergy.total'
+          tags:
+            - tag: component
+              value: energy
+        - uuid: 8800ab271f804d8a96c5532c80066b4e
+          name: 'PM1: Returned energy total'
+          type: DEPENDENT
+          key: 'shelly.pm1.ret_aenergy.total'
+          value_type: FLOAT
+          units: Wh
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["pm1:0"].ret_aenergy.total'
+          tags:
+            - tag: component
+              value: energy
+        - uuid: 7bd43215930741bba455d56e0261fbd3
+          name: 'Model'
+          type: DEPENDENT
+          key: 'shelly.model'
+          value_type: CHAR
+          inventory_link: MODEL
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'return "{$SHELLY.MODEL}";'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
+  triggers:
+    - uuid: 7f4d40cb5e2f4d9a8b1c6e3a2f5d9e01
+      expression: 'last(/Shelly PM Mini Gen3 by HTTP/shelly.pm1.apower)>{$SHELLY.POWER.MAX}'
+      name: 'Shelly PM Mini: High active power (>{$SHELLY.POWER.MAX} W)'
+      priority: WARNING
+      description: 'Active power exceeded the threshold.'

@@ -1,0 +1,89 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 9702754414644deba5cb4ed3e9f33594
+      name: Templates/IoT
+  templates:
+    - uuid: 6848b71091014d049a01add133876d56
+      template: 'Shelly Mini 1 Gen3 by HTTP'
+      name: 'Shelly Mini 1 Gen3 by HTTP'
+      description: |
+        Shelly Mini 1 Gen3 (S3SW-001X8EU) — single-channel NON-metering relay,
+        monitored over the local HTTP RPC API. Links "Shelly Gen2/3 common by
+        HTTP" for system/wifi/cloud/mqtt/ws; adds the switch:0 relay state and
+        input:0. This device has NO power metering (no apower/voltage/current).
+
+        Import the common base FIRST. Set {$SHELLY.HTTP.HOST} on the host.
+      templates:
+        - name: 'Shelly Gen2/3 common by HTTP'
+      groups:
+        - name: Templates/IoT
+      macros:
+        - macro: '{$SHELLY.MODEL}'
+          value: 'S3SW-001X8EU'
+          description: 'Device model/SKU, fed to host inventory Model. Override per host if needed.'
+      items:
+        - uuid: 106d12a51bfb46e49b57456aafec7d27
+          name: 'Switch 0: Output'
+          type: DEPENDENT
+          key: 'shelly.switch.output[0]'
+          value_type: UNSIGNED
+          description: 'Relay output state (1=on).'
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["switch:0"].output'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: switch
+        - uuid: 4c177818a58a45a1a9daca6717931e45
+          name: 'Input 0: State'
+          type: DEPENDENT
+          key: 'shelly.input.state[0]'
+          value_type: UNSIGNED
+          description: 'Input 0 state (1=active). If the input is in a non-binary mode the device reports null — that is discarded (item stays empty) rather than erroring.'
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["input:0"].state'
+              error_handler: DISCARD_VALUE
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+              error_handler: DISCARD_VALUE
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1h'
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: input
+        - uuid: 4ac9883c136d47a28e386d42f1e8ddfc
+          name: 'Model'
+          type: DEPENDENT
+          key: 'shelly.model'
+          value_type: CHAR
+          description: 'Constant device model from {$SHELLY.MODEL} — feeds host inventory Model. JS returns the macro value; discards unchanged.'
+          inventory_link: MODEL
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'return "{$SHELLY.MODEL}";'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
