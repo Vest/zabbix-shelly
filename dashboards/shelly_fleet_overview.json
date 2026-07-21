@@ -78,12 +78,22 @@
               "value": "*: Active power"
             },
             {
+              "type": "0",
+              "name": "columns.1.display",
+              "value": "1"
+            },
+            {
               "type": "1",
               "name": "columns.1.base_color",
               "value": "1E88E5"
             },
             {
               "type": "0",
+              "name": "order",
+              "value": "2"
+            },
+            {
+              "type": "1",
               "name": "column",
               "value": "1"
             }
@@ -101,7 +111,7 @@
             {
               "type": "1",
               "name": "ds.0.hosts.0",
-              "value": "*"
+              "value": "shelly*"
             },
             {
               "type": "1",
@@ -117,6 +127,21 @@
               "type": "0",
               "name": "ds.0.type",
               "value": "1"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.width",
+              "value": "2"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.fill",
+              "value": "3"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.transparency",
+              "value": "5"
             },
             {
               "type": "1",
@@ -139,19 +164,9 @@
               "value": "SHPWR"
             },
             {
-              "type": "0",
-              "name": "righty",
-              "value": "0"
-            },
-            {
-              "type": "0",
-              "name": "legend_lines",
-              "value": "5"
-            },
-            {
-              "type": "0",
-              "name": "legend_columns",
-              "value": "3"
+              "type": "1",
+              "name": "legend",
+              "value": "1"
             }
           ]
         },
@@ -167,7 +182,7 @@
             {
               "type": "1",
               "name": "ds.0.hosts.0",
-              "value": "*"
+              "value": "shelly*"
             },
             {
               "type": "1",
@@ -185,6 +200,21 @@
               "value": "1"
             },
             {
+              "type": "0",
+              "name": "ds.0.width",
+              "value": "2"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.fill",
+              "value": "0"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.transparency",
+              "value": "5"
+            },
+            {
               "type": "1",
               "name": "time_period.from",
               "value": "now-7d"
@@ -200,14 +230,9 @@
               "value": "SHRSS"
             },
             {
-              "type": "0",
-              "name": "righty",
-              "value": "0"
-            },
-            {
-              "type": "0",
-              "name": "legend_lines",
-              "value": "4"
+              "type": "1",
+              "name": "legend",
+              "value": "1"
             }
           ]
         },
@@ -223,7 +248,7 @@
             {
               "type": "1",
               "name": "ds.0.hosts.0",
-              "value": "*"
+              "value": "shelly*"
             },
             {
               "type": "1",
@@ -241,6 +266,21 @@
               "value": "1"
             },
             {
+              "type": "0",
+              "name": "ds.0.width",
+              "value": "2"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.fill",
+              "value": "0"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.transparency",
+              "value": "5"
+            },
+            {
               "type": "1",
               "name": "time_period.from",
               "value": "now-7d"
@@ -256,14 +296,9 @@
               "value": "SHTMP"
             },
             {
-              "type": "0",
-              "name": "righty",
-              "value": "0"
-            },
-            {
-              "type": "0",
-              "name": "legend_lines",
-              "value": "4"
+              "type": "1",
+              "name": "legend",
+              "value": "1"
             }
           ]
         },
@@ -279,7 +314,7 @@
             {
               "type": "1",
               "name": "ds.0.hosts.0",
-              "value": "*"
+              "value": "shelly*"
             },
             {
               "type": "1",
@@ -297,9 +332,24 @@
               "value": "1"
             },
             {
+              "type": "0",
+              "name": "ds.0.width",
+              "value": "2"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.fill",
+              "value": "3"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.transparency",
+              "value": "5"
+            },
+            {
               "type": "1",
               "name": "ds.1.hosts.0",
-              "value": "*"
+              "value": "shelly*"
             },
             {
               "type": "1",
@@ -317,6 +367,21 @@
               "value": "1"
             },
             {
+              "type": "0",
+              "name": "ds.1.width",
+              "value": "2"
+            },
+            {
+              "type": "0",
+              "name": "ds.1.fill",
+              "value": "3"
+            },
+            {
+              "type": "0",
+              "name": "ds.1.transparency",
+              "value": "5"
+            },
+            {
               "type": "1",
               "name": "time_period.from",
               "value": "now-30d"
@@ -332,19 +397,9 @@
               "value": "SHNRG"
             },
             {
-              "type": "0",
-              "name": "righty",
-              "value": "0"
-            },
-            {
-              "type": "0",
-              "name": "legend_lines",
-              "value": "5"
-            },
-            {
-              "type": "0",
-              "name": "legend_columns",
-              "value": "3"
+              "type": "1",
+              "name": "legend",
+              "value": "1"
             }
           ]
         }
