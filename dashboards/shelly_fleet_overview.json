@@ -1,0 +1,354 @@
+{
+  "name": "Shelly fleet overview",
+  "display_period": "30",
+  "auto_start": "1",
+  "pages": [
+    {
+      "name": "Overview",
+      "display_period": "0",
+      "widgets": [
+        {
+          "type": "problems",
+          "name": "Shelly problems",
+          "x": "0",
+          "y": "0",
+          "width": "36",
+          "height": "5",
+          "view_mode": "0",
+          "fields": [
+            {
+              "type": "0",
+              "name": "show",
+              "value": "3"
+            },
+            {
+              "type": "0",
+              "name": "show_tags",
+              "value": "3"
+            },
+            {
+              "type": "2",
+              "name": "groupids.0",
+              "value": "23"
+            },
+            {
+              "type": "1",
+              "name": "reference",
+              "value": "SHPRB"
+            }
+          ]
+        },
+        {
+          "type": "tophosts",
+          "name": "Top power consumers (now)",
+          "x": "36",
+          "y": "0",
+          "width": "36",
+          "height": "5",
+          "view_mode": "0",
+          "fields": [
+            {
+              "type": "2",
+              "name": "groupids.0",
+              "value": "23"
+            },
+            {
+              "type": "1",
+              "name": "columns.0.name",
+              "value": "Host"
+            },
+            {
+              "type": "0",
+              "name": "columns.0.data",
+              "value": "2"
+            },
+            {
+              "type": "1",
+              "name": "columns.1.name",
+              "value": "Active power (W)"
+            },
+            {
+              "type": "0",
+              "name": "columns.1.data",
+              "value": "1"
+            },
+            {
+              "type": "1",
+              "name": "columns.1.item",
+              "value": "*: Active power"
+            },
+            {
+              "type": "1",
+              "name": "columns.1.base_color",
+              "value": "1E88E5"
+            },
+            {
+              "type": "0",
+              "name": "column",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "type": "svggraph",
+          "name": "Active power \u2014 all Shellies (24h)",
+          "x": "0",
+          "y": "5",
+          "width": "72",
+          "height": "5",
+          "view_mode": "0",
+          "fields": [
+            {
+              "type": "1",
+              "name": "ds.0.hosts.0",
+              "value": "*"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.items.0",
+              "value": "*: Active power"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.color",
+              "value": "1E88E5"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.type",
+              "value": "1"
+            },
+            {
+              "type": "1",
+              "name": "time_period.from",
+              "value": "now-24h"
+            },
+            {
+              "type": "1",
+              "name": "time_period.to",
+              "value": "now"
+            },
+            {
+              "type": "0",
+              "name": "axisx",
+              "value": "0"
+            },
+            {
+              "type": "1",
+              "name": "reference",
+              "value": "SHPWR"
+            },
+            {
+              "type": "0",
+              "name": "righty",
+              "value": "0"
+            },
+            {
+              "type": "0",
+              "name": "legend_lines",
+              "value": "5"
+            },
+            {
+              "type": "0",
+              "name": "legend_columns",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "type": "svggraph",
+          "name": "WiFi RSSI \u2014 all Shellies (7d)",
+          "x": "0",
+          "y": "10",
+          "width": "36",
+          "height": "5",
+          "view_mode": "0",
+          "fields": [
+            {
+              "type": "1",
+              "name": "ds.0.hosts.0",
+              "value": "*"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.items.0",
+              "value": "WiFi: RSSI"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.color",
+              "value": "8E24AA"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.type",
+              "value": "1"
+            },
+            {
+              "type": "1",
+              "name": "time_period.from",
+              "value": "now-7d"
+            },
+            {
+              "type": "1",
+              "name": "time_period.to",
+              "value": "now"
+            },
+            {
+              "type": "1",
+              "name": "reference",
+              "value": "SHRSS"
+            },
+            {
+              "type": "0",
+              "name": "righty",
+              "value": "0"
+            },
+            {
+              "type": "0",
+              "name": "legend_lines",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "type": "svggraph",
+          "name": "Temperature \u2014 all Shellies (7d)",
+          "x": "36",
+          "y": "10",
+          "width": "36",
+          "height": "5",
+          "view_mode": "0",
+          "fields": [
+            {
+              "type": "1",
+              "name": "ds.0.hosts.0",
+              "value": "*"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.items.0",
+              "value": "*: Temperature"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.color",
+              "value": "E53935"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.type",
+              "value": "1"
+            },
+            {
+              "type": "1",
+              "name": "time_period.from",
+              "value": "now-7d"
+            },
+            {
+              "type": "1",
+              "name": "time_period.to",
+              "value": "now"
+            },
+            {
+              "type": "1",
+              "name": "reference",
+              "value": "SHTMP"
+            },
+            {
+              "type": "0",
+              "name": "righty",
+              "value": "0"
+            },
+            {
+              "type": "0",
+              "name": "legend_lines",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "type": "svggraph",
+          "name": "Energy total (30d)",
+          "x": "0",
+          "y": "15",
+          "width": "72",
+          "height": "5",
+          "view_mode": "0",
+          "fields": [
+            {
+              "type": "1",
+              "name": "ds.0.hosts.0",
+              "value": "*"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.items.0",
+              "value": "*: Energy total"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.color",
+              "value": "43A047"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.type",
+              "value": "1"
+            },
+            {
+              "type": "1",
+              "name": "ds.1.hosts.0",
+              "value": "*"
+            },
+            {
+              "type": "1",
+              "name": "ds.1.items.0",
+              "value": "PM1: Energy total"
+            },
+            {
+              "type": "1",
+              "name": "ds.1.color",
+              "value": "FB8C00"
+            },
+            {
+              "type": "0",
+              "name": "ds.1.type",
+              "value": "1"
+            },
+            {
+              "type": "1",
+              "name": "time_period.from",
+              "value": "now-30d"
+            },
+            {
+              "type": "1",
+              "name": "time_period.to",
+              "value": "now"
+            },
+            {
+              "type": "1",
+              "name": "reference",
+              "value": "SHNRG"
+            },
+            {
+              "type": "0",
+              "name": "righty",
+              "value": "0"
+            },
+            {
+              "type": "0",
+              "name": "legend_lines",
+              "value": "5"
+            },
+            {
+              "type": "0",
+              "name": "legend_columns",
+              "value": "3"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
