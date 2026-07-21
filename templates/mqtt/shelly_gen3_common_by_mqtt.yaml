@@ -38,7 +38,7 @@ zabbix_export:
           value: ''
           description: 'REQUIRED. FULL device MQTT topic root = <mqtt-prefix>/<device-name>, e.g. shelly/shelly-livingroom-pm. Passed verbatim (session Topic is not prepended). Set per host.'
         - macro: '{$SHELLY.RSSI.MIN}'
-          value: '-75'
+          value: '-80'
           description: 'WiFi RSSI (dBm) below which the signal is considered weak. Trigger fires if sustained.'
       items:
         - uuid: bfaabad2d5a34e3682f7a9b4beef60c5

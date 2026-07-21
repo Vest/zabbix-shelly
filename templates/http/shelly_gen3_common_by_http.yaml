@@ -49,7 +49,7 @@ zabbix_export:
           value: '5m'
           description: 'No-data window before the device is considered unreachable (nodata() on the uptime item).'
         - macro: '{$SHELLY.RSSI.MIN}'
-          value: '-75'
+          value: '-80'
           description: 'WiFi RSSI (dBm) below which the signal is considered weak.'
       items:
         - uuid: ce09b199f5db4a77ba48e0b5753eff42
