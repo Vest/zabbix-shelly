@@ -37,9 +37,6 @@ zabbix_export:
         - macro: '{$SHELLY.TOPIC}'
           value: ''
           description: 'REQUIRED. FULL device MQTT topic root = <mqtt-prefix>/<device-name>, e.g. shelly/shelly-livingroom-pm. Passed verbatim (session Topic is not prepended). Set per host.'
-        - macro: '{$SHELLY.DATA.TIMEOUT}'
-          value: '10m'
-          description: 'No-data window before the device is considered offline (nodata() on the uptime item).'
         - macro: '{$SHELLY.RSSI.MIN}'
           value: '-75'
           description: 'WiFi RSSI (dBm) below which the signal is considered weak. Trigger fires if sustained.'
@@ -52,7 +49,7 @@ zabbix_export:
           history: '0'
           trends: '0'
           value_type: TEXT
-          description: 'Master item: full JSON payload from status/sys. Dependents parse fields from this. No history (history=0) — liveness is checked via nodata() on the small uptime dependent, not this text blob.'
+          description: 'Master item: full JSON payload from status/sys. Dependents parse fields from this. No history (history=0) — it is a text blob only used to feed dependents. NOTE: sys publishes infrequently over MQTT (unlike pm1:0/switch:0), so do NOT use nodata() on sys-derived items for liveness — use the online (LWT) trigger instead.'
           tags:
             - tag: component
               value: raw
@@ -494,12 +491,7 @@ zabbix_export:
       expression: 'last(/Shelly Gen3 common by MQTT/mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/online])=0'
       name: 'Shelly: Device reported offline (LWT)'
       priority: HIGH
-      description: 'The broker received the device Last-Will message; the Shelly disconnected uncleanly (power loss / crash / network).'
-    - uuid: c8cf63dfdd0f42d9873ed687d45dc646
-      expression: 'nodata(/Shelly Gen3 common by MQTT/shelly.sys.uptime,{$SHELLY.DATA.TIMEOUT})=1'
-      name: 'Shelly: No data received'
-      priority: WARNING
-      description: 'No sys update within {$SHELLY.DATA.TIMEOUT} (default 10m — rides out brief WiFi blips/reboots). Checked on the small uptime dependent (not the raw text master) to keep the value cache light.'
+      description: 'The broker received the device Last-Will message; the Shelly disconnected uncleanly (power loss / crash / network). This is the liveness signal for MQTT — it reflects the actual MQTT session, independent of how often the device publishes status topics (sys can be minutes stale while the device is fine).'
     - uuid: 16247156096e4e51af29b69903ad2a61
       expression: 'last(/Shelly Gen3 common by MQTT/shelly.sys.uptime)<120'
       name: 'Shelly: Device restarted'
