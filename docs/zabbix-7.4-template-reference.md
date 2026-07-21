@@ -14,6 +14,7 @@ Working notes for authoring importable Zabbix 7.4 template YAML. Source: https:/
 - ✅ **VERIFIED (7.4):** UUIDs must be valid **UUIDv4**, not just 32 hex chars. Import fails with `Invalid parameter "/N/uuid": UUIDv4 is expected.` if the version/variant nibbles are wrong. In the 32-char form: **13th hex digit must be `4`** (version), **17th must be `8/9/a/b`** (variant). Do NOT hand-author UUIDs — generate them: `python3 -c "import uuid;print(uuid.uuid4().hex)"`.
 - UUIDs must be exactly **32 lowercase hex chars**, unique across the file. A stray space or extra char = silent-looking parse failure.
 - No tabs anywhere. 2-space indent throughout.
+- ✅ **VERIFIED (7.4):** item `history` must be **`0` or ≥ 1 hour** — the API rejects sub-hour values: `Invalid parameter "/1/history": value must be one of 0, 3600-788400000`. So there is no "5m history"; use `0` (keep nothing) or `1h`+ . For a master item read only via dependents, `0` is correct and lightest on the value cache.
 - Item-level element referencing a value map is `valuemap:` (singular) with `name:`.
 - ✅ **VERIFIED (7.4):** **Value maps do NOT inherit across a template link.** A child/linked template inherits the base's items and triggers, but NOT its `valuemaps`. If a device template's item references a value map (e.g. `Shelly boolean`), that map must be defined in the SAME template — even if the linked base already defines an identical one. Import fails with `Cannot find value map "X" used for item "..."`. Fix: duplicate the value map into each template whose items use it (identical copies are fine; give each its own UUID). This is standard practice in official Zabbix templates.
 - ✅ **VERIFIED (7.4):** **No `/` in template/host names.** A dashboard item widget referencing a template whose name contains a slash (e.g. `Shelly Gen2/3 common`) FAILS import with `Invalid parameter "/1/host": invalid host name.` — Zabbix rejects `/` in the host/template name used in widget `host:` fields (and it's risky in trigger-expression paths too, since `/` delimits the host there). Keep template names slash-free (use `Gen2 Gen3`, not `Gen2/3`). Also avoid `/` in trigger names to be safe.
@@ -129,7 +130,7 @@ One `mqtt.get` master item per **topic** (one MQTT subscription). All scalars fr
   key: 'shelly.http.status'
   url: '{$SHELLY.HTTP.SCHEME}://{HOST.CONN}/rpc/Shelly.GetStatus'
   delay: '1m'
-  history: '5m'      # short — big text blob, only feeds dependents (not read by nodata)
+  history: '0'       # no history — big text blob, only feeds dependents (nodata() runs on the uptime scalar instead)
   value_type: TEXT
   timeout: '10s'
   authtype: NONE     # DIGEST + {$SHELLY.HTTP.USER}/{$SHELLY.HTTP.PASSWORD} if auth_en

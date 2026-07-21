@@ -39,7 +39,7 @@ zabbix_export:
           description: 'REQUIRED. FULL device MQTT topic root = <mqtt-prefix>/<device-name>, e.g. shelly/shelly-livingroom-pm. Passed verbatim (session Topic is not prepended). Set per host.'
         - macro: '{$SHELLY.DATA.TIMEOUT}'
           value: '10m'
-          description: 'No-data window before the device is considered offline (nodata() on the sys topic).'
+          description: 'No-data window before the device is considered offline (nodata() on the uptime item).'
         - macro: '{$SHELLY.RSSI.MIN}'
           value: '-75'
           description: 'WiFi RSSI (dBm) below which the signal is considered weak. Trigger fires if sustained.'
@@ -49,10 +49,10 @@ zabbix_export:
           type: ZABBIX_ACTIVE
           key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
           delay: '0'
-          history: '5m'
+          history: '0'
           trends: '0'
           value_type: TEXT
-          description: 'Master item: full JSON payload from status/sys. Dependents parse fields from this. History kept short (5m) — liveness is checked via nodata() on the small uptime dependent, not this text blob.'
+          description: 'Master item: full JSON payload from status/sys. Dependents parse fields from this. No history (history=0) — liveness is checked via nodata() on the small uptime dependent, not this text blob.'
           tags:
             - tag: component
               value: raw

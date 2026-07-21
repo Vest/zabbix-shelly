@@ -47,7 +47,7 @@ zabbix_export:
           description: 'HTTP digest password, only if the device has authentication enabled. Blank = no auth. Stored as secret text (masked in the UI).'
         - macro: '{$SHELLY.DATA.TIMEOUT}'
           value: '5m'
-          description: 'No-data window before the device is considered unreachable (nodata() on the GetStatus master).'
+          description: 'No-data window before the device is considered unreachable (nodata() on the uptime item).'
         - macro: '{$SHELLY.RSSI.MIN}'
           value: '-75'
           description: 'WiFi RSSI (dBm) below which the signal is considered weak.'
@@ -58,12 +58,12 @@ zabbix_export:
           key: 'shelly.http.status'
           url: '{$SHELLY.HTTP.SCHEME}://{HOST.CONN}/rpc/Shelly.GetStatus'
           delay: '1m'
-          history: '5m'
+          history: '0'
           trends: '0'
           value_type: TEXT
           timeout: '10s'
           authtype: NONE
-          description: 'Master item: full JSON from /rpc/Shelly.GetStatus. Uses {HOST.CONN} — the host interface address — so network-discovery-created hosts work with no extra config (discovery adds the interface). For a manually created host, add an interface with the device IP (agent interface is fine). All dependent items parse fields from this. History kept short (5m) — it is a large text blob only used to feed dependents (which is why liveness is checked via nodata() on the small uptime item, not this master). For devices with auth enabled, switch authtype to DIGEST and set the USER/PASSWORD macros.'
+          description: 'Master item: full JSON from /rpc/Shelly.GetStatus. Uses {HOST.CONN} — the host interface address — so network-discovery-created hosts work with no extra config (discovery adds the interface). For a manually created host, add an interface with the device IP (agent interface is fine). All dependent items parse fields from this. No history (history=0) — it is a large text blob only used to feed dependents; liveness is checked via nodata() on the small uptime item, not this master. For devices with auth enabled, switch authtype to DIGEST and set the USER/PASSWORD macros.'
           tags:
             - tag: component
               value: raw
