@@ -1,0 +1,177 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 9702754414644deba5cb4ed3e9f33594
+      name: Templates/IoT
+  templates:
+    - uuid: d64a29a79a5a42b3857a55c3761c54ce
+      template: 'Shelly Plug S Gen3 by MQTT'
+      name: 'Shelly Plug S Gen3 by MQTT'
+      description: |
+        Shelly Plug S Gen3 (S3PL-00112EU) — metered smart plug, monitored over
+        MQTT via the Zabbix agent 2 MQTT plugin. Links "Shelly Gen3 common by
+        MQTT" for sys/wifi/cloud/mqtt/ws/online; adds switch:0 (output + power
+        metering + temperature) from the status/switch:0 topic.
+
+        Import the common base FIRST. Set {$SHELLY.SESSION} and {$SHELLY.TOPIC}
+        on the host (see the base template / README).
+      templates:
+        - name: 'Shelly Gen3 common by MQTT'
+      groups:
+        - name: Templates/IoT
+      macros:
+        - macro: '{$SHELLY.MODEL}'
+          value: 'S3PL-00112EU'
+          description: 'Device model/SKU, fed to host inventory Model.'
+        - macro: '{$SHELLY.POWER.MAX}'
+          value: '2500'
+          description: 'High active-power warning threshold, watts.'
+        - macro: '{$SHELLY.TEMP.MAX}'
+          value: '80'
+          description: 'Device temperature (°C) above which a high-temperature warning fires.'
+      items:
+        - uuid: 46c968b4ceb849ab9f428b7e0433a8cd
+          name: 'Switch 0: Raw status'
+          type: ZABBIX_ACTIVE
+          key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          delay: '0'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          description: 'Master item: full JSON from status/switch:0. Dependents parse fields from this. No history (history=0) — it is a text blob only used to feed dependents.'
+          tags:
+            - tag: component
+              value: raw
+        - uuid: d31b9561708546a092b208eaa36371dc
+          name: 'Switch 0: Output'
+          type: DEPENDENT
+          key: 'shelly.switch.output[0]'
+          value_type: UNSIGNED
+          description: 'Relay output state (1=on).'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.output'
+            - type: BOOL_TO_DECIMAL
+              parameters:
+                - ''
+          valuemap:
+            name: 'Shelly boolean'
+          tags:
+            - tag: component
+              value: switch
+        - uuid: b6681c3db6e34f7981301947b84cf454
+          name: 'Switch 0: Active power'
+          type: DEPENDENT
+          key: 'shelly.switch.apower[0]'
+          value_type: FLOAT
+          units: W
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.apower'
+          tags:
+            - tag: component
+              value: power
+        - uuid: a394fbcc926e496f9515ce3e9174ac69
+          name: 'Switch 0: Voltage'
+          type: DEPENDENT
+          key: 'shelly.switch.voltage[0]'
+          value_type: FLOAT
+          units: V
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.voltage'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 0fae76e5329643ea9cedc1d6712d034e
+          name: 'Switch 0: Current'
+          type: DEPENDENT
+          key: 'shelly.switch.current[0]'
+          value_type: FLOAT
+          units: A
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.current'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 26e36cd31023477d8430f418de751ab6
+          name: 'Switch 0: Energy total'
+          type: DEPENDENT
+          key: 'shelly.switch.aenergy[0]'
+          value_type: FLOAT
+          units: Wh
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.aenergy.total'
+          tags:
+            - tag: component
+              value: energy
+        - uuid: 4e2719c7a8694082a3429edbdd59b509
+          name: 'Switch 0: Temperature'
+          type: DEPENDENT
+          key: 'shelly.switch.temperature[0]'
+          value_type: FLOAT
+          units: °C
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.temperature.tC'
+          tags:
+            - tag: component
+              value: temperature
+        - uuid: 4a886c0c4f684119a4fdefae439c0e18
+          name: 'Model'
+          type: DEPENDENT
+          key: 'shelly.model'
+          value_type: CHAR
+          description: 'Constant device model from {$SHELLY.MODEL} — feeds host inventory Model. JS returns the macro value; discards unchanged. Derived off the switch:0 master.'
+          inventory_link: MODEL
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'return "{$SHELLY.MODEL}";'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - '1d'
+          tags:
+            - tag: component
+              value: inventory
+      valuemaps:
+        - uuid: 74e53104414146948d2da3e4cd3902b6
+          name: 'Shelly boolean'
+          mappings:
+            - value: '0'
+              newvalue: 'No'
+            - value: '1'
+              newvalue: 'Yes'
+  triggers:
+    - uuid: 4a3d7e9b6c1f4a8d9e2b5c7f0a3d6e91
+      expression: 'last(/Shelly Plug S Gen3 by MQTT/shelly.switch.apower[0])>{$SHELLY.POWER.MAX}'
+      name: 'Shelly Plug S: High power draw (>{$SHELLY.POWER.MAX} W)'
+      priority: WARNING
+      description: 'Active power exceeded the threshold.'
+    - uuid: 5b4e8f0c7d2a4b9e8f3c6d1a4b7e0c92
+      expression: 'last(/Shelly Plug S Gen3 by MQTT/shelly.switch.temperature[0])>{$SHELLY.TEMP.MAX}'
+      name: 'Shelly Plug S: High temperature (>{$SHELLY.TEMP.MAX} °C)'
+      priority: WARNING
+      description: 'Device internal temperature exceeded the threshold — possible overheating.'
