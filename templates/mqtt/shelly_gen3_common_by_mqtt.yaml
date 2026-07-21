@@ -49,10 +49,10 @@ zabbix_export:
           type: ZABBIX_ACTIVE
           key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys]'
           delay: '0'
-          history: '1h'
+          history: '5m'
           trends: '0'
           value_type: TEXT
-          description: 'Master item: full JSON payload from status/sys. Keeps 1h history (not 0) because the "No data received" trigger uses nodata() on this item, which requires history.'
+          description: 'Master item: full JSON payload from status/sys. Dependents parse fields from this. History kept short (5m) — liveness is checked via nodata() on the small uptime dependent, not this text blob.'
           tags:
             - tag: component
               value: raw
@@ -496,10 +496,10 @@ zabbix_export:
       priority: HIGH
       description: 'The broker received the device Last-Will message; the Shelly disconnected uncleanly (power loss / crash / network).'
     - uuid: c8cf63dfdd0f42d9873ed687d45dc646
-      expression: 'nodata(/Shelly Gen3 common by MQTT/mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/sys],{$SHELLY.DATA.TIMEOUT})=1'
+      expression: 'nodata(/Shelly Gen3 common by MQTT/shelly.sys.uptime,{$SHELLY.DATA.TIMEOUT})=1'
       name: 'Shelly: No data received'
       priority: WARNING
-      description: 'No status/sys update within {$SHELLY.DATA.TIMEOUT} (default 10m — rides out brief WiFi blips/reboots). Requires the sys master to have history>0 (set to 1h). If this trigger shows an error rather than firing, that history is missing.'
+      description: 'No sys update within {$SHELLY.DATA.TIMEOUT} (default 10m — rides out brief WiFi blips/reboots). Checked on the small uptime dependent (not the raw text master) to keep the value cache light.'
     - uuid: 16247156096e4e51af29b69903ad2a61
       expression: 'last(/Shelly Gen3 common by MQTT/shelly.sys.uptime)<120'
       name: 'Shelly: Device restarted'

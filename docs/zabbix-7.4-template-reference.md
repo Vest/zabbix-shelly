@@ -129,13 +129,13 @@ One `mqtt.get` master item per **topic** (one MQTT subscription). All scalars fr
   key: 'shelly.http.status'
   url: '{$SHELLY.HTTP.SCHEME}://{HOST.CONN}/rpc/Shelly.GetStatus'
   delay: '1m'
-  history: '1h'      # nodata() liveness trigger reads this
+  history: '5m'      # short — big text blob, only feeds dependents (not read by nodata)
   value_type: TEXT
   timeout: '10s'
   authtype: NONE     # DIGEST + {$SHELLY.HTTP.USER}/{$SHELLY.HTTP.PASSWORD} if auth_en
 ```
 - Colon component keys need **bracket JSONPath**: `$["pm1:0"].apower`, `$["switch:0"].output`, `$["switch:1"].temperature.tC`. Dot syntax (`$.pm1:0.apower`) fails on the colon.
-- No LWT "online" item over HTTP — represent liveness with `nodata()` on the master (needs `history` > 0, hence `1h`).
+- No LWT "online" item over HTTP — represent liveness with `nodata()` on a small numeric dependent (the `uptime` item), NOT on the raw text master. `nodata()` needs the item to have history, so point it at a cheap scalar and keep the master's history short (`5m`) — caching a large JSON blob for a long window bloats the value cache for no benefit (a trigger only reads `last()` of the master's dependents).
 - Dependent items in a DEVICE template can reference a master (`shelly.http.status`) that lives in the LINKED common template — inheritance resolves it by key.
 - **Use `{HOST.CONN}` for the device address, NOT an empty macro.** Network discovery can't set a user macro (its operations are add-host/group/template/inventory-mode only), but it DOES add an interface with the discovered IP. So `{HOST.CONN}` resolves automatically for discovered hosts. A macro that ships empty expands to `http:///rpc/...`, and Zabbix then parses the first path segment as the host → **`Could not resolve host: rpc`**. Manually created hosts just need an interface with the IP.
 

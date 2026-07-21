@@ -58,12 +58,12 @@ zabbix_export:
           key: 'shelly.http.status'
           url: '{$SHELLY.HTTP.SCHEME}://{HOST.CONN}/rpc/Shelly.GetStatus'
           delay: '1m'
-          history: '1h'
+          history: '5m'
           trends: '0'
           value_type: TEXT
           timeout: '10s'
           authtype: NONE
-          description: 'Master item: full JSON from /rpc/Shelly.GetStatus. Uses {HOST.CONN} — the host interface address — so network-discovery-created hosts work with no extra config (discovery adds the interface). For a manually created host, add an interface with the device IP (agent interface is fine). All dependent items parse fields from this. Keeps 1h history so the no-data trigger (nodata) can evaluate. For devices with auth enabled, switch authtype to DIGEST and set the USER/PASSWORD macros.'
+          description: 'Master item: full JSON from /rpc/Shelly.GetStatus. Uses {HOST.CONN} — the host interface address — so network-discovery-created hosts work with no extra config (discovery adds the interface). For a manually created host, add an interface with the device IP (agent interface is fine). All dependent items parse fields from this. History kept short (5m) — it is a large text blob only used to feed dependents (which is why liveness is checked via nodata() on the small uptime item, not this master). For devices with auth enabled, switch authtype to DIGEST and set the USER/PASSWORD macros.'
           tags:
             - tag: component
               value: raw
@@ -435,10 +435,10 @@ zabbix_export:
               newvalue: 'RTC watchdog (core+RTC)'
   triggers:
     - uuid: d136bf7d5f474c368207a15b8fcf7614
-      expression: 'nodata(/Shelly Gen2 Gen3 common by HTTP/shelly.http.status,{$SHELLY.DATA.TIMEOUT})=1'
+      expression: 'nodata(/Shelly Gen2 Gen3 common by HTTP/shelly.sys.uptime,{$SHELLY.DATA.TIMEOUT})=1'
       name: 'Shelly: No data (unreachable)'
       priority: HIGH
-      description: 'No GetStatus response within the timeout. Device is powered off, off the network, or HTTP is blocked (check the server->device firewall path).'
+      description: 'No uptime update within the timeout — the device stopped reporting (powered off, off the network, or HTTP blocked). Checked on the small uptime item rather than the large raw-status master to keep the value cache light.'
     - uuid: 6bfeb144deaa4e6d9ade72556b98691c
       expression: 'last(/Shelly Gen2 Gen3 common by HTTP/shelly.sys.uptime)<120'
       name: 'Shelly: Device restarted'
