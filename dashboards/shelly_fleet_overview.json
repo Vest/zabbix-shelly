@@ -164,9 +164,19 @@
               "value": "SHPWR"
             },
             {
-              "type": "1",
+              "type": "0",
               "name": "legend",
               "value": "1"
+            },
+            {
+              "type": "0",
+              "name": "legend_columns",
+              "value": "4"
+            },
+            {
+              "type": "0",
+              "name": "legend_lines",
+              "value": "4"
             }
           ]
         },
@@ -230,9 +240,19 @@
               "value": "SHRSS"
             },
             {
-              "type": "1",
+              "type": "0",
               "name": "legend",
               "value": "1"
+            },
+            {
+              "type": "0",
+              "name": "legend_columns",
+              "value": "3"
+            },
+            {
+              "type": "0",
+              "name": "legend_lines",
+              "value": "4"
             }
           ]
         },
@@ -296,9 +316,19 @@
               "value": "SHTMP"
             },
             {
-              "type": "1",
+              "type": "0",
               "name": "legend",
               "value": "1"
+            },
+            {
+              "type": "0",
+              "name": "legend_columns",
+              "value": "3"
+            },
+            {
+              "type": "0",
+              "name": "legend_lines",
+              "value": "4"
             }
           ]
         },
@@ -397,9 +427,19 @@
               "value": "SHNRG"
             },
             {
-              "type": "1",
+              "type": "0",
               "name": "legend",
               "value": "1"
+            },
+            {
+              "type": "0",
+              "name": "legend_columns",
+              "value": "4"
+            },
+            {
+              "type": "0",
+              "name": "legend_lines",
+              "value": "4"
             }
           ]
         }
