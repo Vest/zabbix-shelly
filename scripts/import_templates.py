@@ -52,11 +52,18 @@ RULES = {
     # REQUIRED so a device template's `templates:` (linked base) block is honored —
     # without templateLinkage the importer silently drops the link to the common base.
     "templateLinkage": {"createMissing": True, "deleteMissing": False},
-    "items": {"createMissing": True, "updateExisting": True, "deleteMissing": False},
-    "triggers": {"createMissing": True, "updateExisting": True, "deleteMissing": False},
+    "items": {"createMissing": True, "updateExisting": True, "deleteMissing": True},
+    "triggers": {"createMissing": True, "updateExisting": True, "deleteMissing": True},
     "valueMaps": {"createMissing": True, "updateExisting": True, "deleteMissing": False},
-    "templateDashboards": {"createMissing": True, "updateExisting": True, "deleteMissing": False},
+    "templateDashboards": {"createMissing": True, "updateExisting": True, "deleteMissing": True},
 }
+# NOTE: items/triggers/templateDashboards use deleteMissing=True so the YAML is
+# AUTHORITATIVE — removing an item/trigger from a template file and re-importing
+# actually deletes it on the server (otherwise removed objects linger as orphans,
+# as happened with the old "No data received" trigger). Trade-off: anything you add
+# to these templates by hand in the UI will be deleted on the next import. Manage
+# these templates via the repo, not the UI. valueMaps stays deleteMissing=False
+# (they are shared and safe to leave).
 
 
 def load_dotenv(path):
