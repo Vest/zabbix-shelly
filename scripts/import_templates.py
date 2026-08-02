@@ -37,11 +37,13 @@ DEFAULT_FILES = [
     "mqtt/shelly_pm_mini_gen3_by_mqtt.yaml",
     "mqtt/shelly_mini_1_gen3_by_mqtt.yaml",
     "mqtt/shelly_plug_s_gen3_by_mqtt.yaml",
+    "mqtt/shelly_plug_m_gen3_by_mqtt.yaml",
     "http/shelly_gen3_common_by_http.yaml",   # HTTP base
     "http/shelly_mini_1_gen3_by_http.yaml",
     "http/shelly_plus_2pm_by_http.yaml",
     "http/shelly_plus_2pm_cover_by_http.yaml",
     "http/shelly_plug_s_gen3_by_http.yaml",
+    "http/shelly_plug_m_gen3_by_http.yaml",
     "http/shelly_pm_mini_gen3_by_http.yaml",
 ]
 

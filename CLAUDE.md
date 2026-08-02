@@ -20,10 +20,12 @@ README.md  CLAUDE.md  LICENSE  .gitignore
 - `shelly_gen3_common_by_mqtt.yaml` — base `Shelly Gen3 common by MQTT`.
 - `shelly_pm_mini_gen3_by_mqtt.yaml` — PM Mini; links the base.
 - `shelly_mini_1_gen3_by_mqtt.yaml` — Mini 1 relay; links the base.
+- `shelly_plug_s_gen3_by_mqtt.yaml` — Plug S metered plug; links the base.
+- `shelly_plug_m_gen3_by_mqtt.yaml` — Plug M metered plug (3000 W / 13 A); links the base.
 
 **HTTP** (Zabbix HTTP agent polling `/rpc/Shelly.GetStatus`; needs server→device TCP/80; no MQTT required) — `templates/http/`:
 - `shelly_gen3_common_by_http.yaml` — base `Shelly Gen2 Gen3 common by HTTP`.
-- `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml` (switch profile), `shelly_plus_2pm_cover_by_http.yaml` (cover profile), `shelly_plug_s_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml` — device templates; each links the HTTP base.
+- `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml` (switch profile), `shelly_plus_2pm_cover_by_http.yaml` (cover profile), `shelly_plug_s_gen3_by_http.yaml`, `shelly_plug_m_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml` — device templates; each links the HTTP base.
 
 - `docs/NETWORK-DISCOVERY.md` — server-level network-discovery setup (HTTP auto-onboarding). Not a template.
 - `docs/zabbix-7.4-template-reference.md` — export/import schema reference + verified gotchas. **Read before editing template YAML.**

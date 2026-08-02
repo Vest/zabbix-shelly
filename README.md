@@ -7,6 +7,9 @@ Two transport families, each a reusable **common base** + thin **device template
 **MQTT** (Zabbix agent 2 MQTT plugin; device publishes to a broker — works across network segmentation):
 - `Shelly Gen3 common by MQTT` — system/WiFi/cloud/MQTT/WebSocket/online.
 - `Shelly PM Mini Gen3 by MQTT` — PM Mini energy meter (`pm1:0`); links the base.
+- `Shelly Mini 1 Gen3 by MQTT` — non-metering relay (switch:0); links the base.
+- `Shelly Plug S Gen3 by MQTT` — metered smart plug (switch:0); links the base.
+- `Shelly Plug M Gen3 by MQTT` — metered smart plug rated 3000 W / 13 A (switch:0); links the base.
 
 **HTTP** (Zabbix HTTP agent polling `/rpc/Shelly.GetStatus`; needs server→device reachability; no MQTT required on the device):
 - `Shelly Gen2 Gen3 common by HTTP` — system/WiFi/cloud/MQTT/WebSocket.
@@ -14,6 +17,7 @@ Two transport families, each a reusable **common base** + thin **device template
 - `Shelly Plus 2PM by HTTP` — two metered switch channels (switch:0/1, **switch** profile).
 - `Shelly Plus 2PM Cover by HTTP` — roller/blind motor (cover:0: state, position, power; **cover** profile).
 - `Shelly Plug S Gen3 by HTTP` — metered smart plug (switch:0).
+- `Shelly Plug M Gen3 by HTTP` — metered smart plug rated 3000 W / 13 A (switch:0).
 - `Shelly PM Mini Gen3 by HTTP` — energy meter (`pm1:0`).
 
 Each device template links its common base. **Import the matching common base first.** The Plus 2PM has two firmware profiles — pick the template matching the device's profile: **switch** (two independent on/off channels) or **cover** (one ganged motor for a shutter/blind). Only one profile is active per device.
@@ -186,7 +190,7 @@ Use this path when the Zabbix server (or proxy) can reach the device over TCP/80
 **Data collection → Templates → Import.** Import the HTTP common base first, then the device template(s):
 
 1. `templates/http/shelly_gen3_common_by_http.yaml`
-2. one or more device templates from `templates/http/`: `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml`, `shelly_plus_2pm_cover_by_http.yaml`, `shelly_plug_s_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml`
+2. one or more device templates from `templates/http/`: `shelly_mini_1_gen3_by_http.yaml`, `shelly_plus_2pm_by_http.yaml`, `shelly_plus_2pm_cover_by_http.yaml`, `shelly_plug_s_gen3_by_http.yaml`, `shelly_plug_m_gen3_by_http.yaml`, `shelly_pm_mini_gen3_by_http.yaml`
 
 ### 2. Ensure reachability
 
