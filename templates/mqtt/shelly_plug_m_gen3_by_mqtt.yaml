@@ -190,6 +190,67 @@ zabbix_export:
           tags:
             - tag: component
               value: temperature
+        - uuid: 7990de65345e4faca4b08120eba7f6b8
+          name: 'Switch 0: Power factor'
+          type: DEPENDENT
+          key: 'shelly.switch.pf[0]'
+          value_type: FLOAT
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.pf'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 10572f9d25d04814b4be68c69dcd4d44
+          name: 'Switch 0: ON time total'
+          type: DEPENDENT
+          key: 'shelly.switch.on_time[0]'
+          value_type: FLOAT
+          units: min
+          description: 'Total accumulated ON time in minutes (counts.on_time).'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.counts.on_time'
+          tags:
+            - tag: component
+              value: switch
+        - uuid: 09085a8182cf439a9fc1a555fe16baf6
+          name: 'Switch 0: ON cycles total'
+          type: DEPENDENT
+          key: 'shelly.switch.switch_on[0]'
+          value_type: UNSIGNED
+          description: 'Total accumulated OFF-to-ON transitions (counts.switch_on).'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.counts.switch_on'
+          tags:
+            - tag: component
+              value: switch
+        - uuid: 3cd35e36c05440f0a037e850fdf3cb1b
+          name: 'Switch 0: Errors'
+          type: DEPENDENT
+          key: 'shelly.switch.errors[0]'
+          value_type: UNSIGNED
+          description: 'Active fault flags (overtemp/overpower/overvoltage/undervoltage). 1 = at least one fault active, 0 = none.'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/switch:0]'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'var e=JSON.parse(value).errors; return (Array.isArray(e)&&e.length>0)?1:0;'
+          tags:
+            - tag: component
+              value: fault
+
         - uuid: 80a39a7352294aa7b1a7dc3b7801f77e
           name: 'Model'
           type: DEPENDENT
@@ -299,3 +360,8 @@ zabbix_export:
       name: 'Shelly Plug M: High temperature (>{$SHELLY.TEMP.MAX} °C)'
       priority: WARNING
       description: 'Device internal temperature exceeded the threshold — possible overheating.'
+    - uuid: 138cfc3b58c24c74b3b8f61464de90ec
+      expression: 'last(/Shelly Plug M Gen3 by MQTT/shelly.switch.errors[0])=1'
+      name: 'Shelly: Switch fault active'
+      priority: HIGH
+      description: 'One or more fault flags are set on switch:0 (overtemp, overpower, overvoltage, undervoltage).'

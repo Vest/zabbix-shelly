@@ -124,6 +124,51 @@ zabbix_export:
             - tag: component
               value: energy
 
+        - uuid: 3b74c80e62b447a1be9ab5491f29939f
+          name: 'PM1: Power factor'
+          type: DEPENDENT
+          key: 'shelly.pm1.pf'
+          value_type: FLOAT
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["pm1:0"].pf'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 2607400bcddc4274b4fc6e9a87c967fe
+          name: 'PM1: Apparent power'
+          type: DEPENDENT
+          key: 'shelly.pm1.aprtpower'
+          value_type: FLOAT
+          units: VA
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$["pm1:0"].aprtpower'
+          tags:
+            - tag: component
+              value: power
+        - uuid: 90c39ed6df04490b8bd3c775ef2dd3be
+          name: 'PM1: Errors'
+          type: DEPENDENT
+          key: 'shelly.pm1.errors'
+          value_type: UNSIGNED
+          description: 'Active fault flags (power_meter_failure, out_of_range:*). 1 = at least one fault active, 0 = none.'
+          master_item:
+            key: 'shelly.http.status'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'var e=JSON.parse(value)["pm1:0"].errors; return (Array.isArray(e)&&e.length>0)?1:0;'
+          tags:
+            - tag: component
+              value: fault
+
         - uuid: 8800ab271f804d8a96c5532c80066b4e
           name: 'PM1: Returned energy total'
           type: DEPENDENT
@@ -163,3 +208,8 @@ zabbix_export:
       name: 'Shelly PM Mini: High active power (>{$SHELLY.POWER.MAX} W)'
       priority: WARNING
       description: 'Active power exceeded the threshold.'
+    - uuid: d6a539520fa743aca8e2cb1690981d0f
+      expression: 'last(/Shelly PM Mini Gen3 by HTTP/shelly.pm1.errors)=1'
+      name: 'Shelly PM: Fault active'
+      priority: HIGH
+      description: 'One or more fault flags are set on pm1:0 (power_meter_failure, out_of_range:*).'
