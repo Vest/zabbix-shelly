@@ -443,16 +443,6 @@
               "value": "5"
             },
             {
-              "type": "0",
-              "name": "ds.0.aggregate_function",
-              "value": "5"
-            },
-            {
-              "type": "1",
-              "name": "ds.0.aggregate_interval",
-              "value": "1h"
-            },
-            {
               "type": "1",
               "name": "ds.1.hosts.0",
               "value": "shelly*"
@@ -481,16 +471,6 @@
               "type": "0",
               "name": "ds.1.transparency",
               "value": "5"
-            },
-            {
-              "type": "0",
-              "name": "ds.1.aggregate_function",
-              "value": "5"
-            },
-            {
-              "type": "1",
-              "name": "ds.1.aggregate_interval",
-              "value": "1h"
             },
             {
               "type": "1",

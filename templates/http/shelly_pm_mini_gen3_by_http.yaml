@@ -104,19 +104,22 @@ zabbix_export:
           tags:
             - tag: component
               value: energy
-        - uuid: a5c9649b9e1d4f5a8fd2e327bbf9d975
+        - uuid: 880f59025b3a4b03b7a0e8c997e8b132
           name: 'PM1: Energy last minute'
           type: DEPENDENT
           key: 'shelly.pm1.aenergy.by_minute'
           value_type: FLOAT
           units: Wh
-          description: 'Energy consumed in the last minute (aenergy.by_minute[0]). Use for consumption-rate graphs.'
+          description: 'Energy consumed in the last complete minute (aenergy.by_minute[0]). Source unit is mWh; preprocessed ×0.001 to Wh. Only present when device clock is synced.'
           master_item:
             key: 'shelly.http.status'
           preprocessing:
             - type: JSONPATH
               parameters:
                 - '$["pm1:0"].aenergy.by_minute[0]'
+            - type: MULTIPLIER
+              parameters:
+                - '0.001'
           tags:
             - tag: component
               value: energy
