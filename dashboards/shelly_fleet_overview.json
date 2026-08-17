@@ -101,7 +101,7 @@
         },
         {
           "type": "svggraph",
-          "name": "Active power \u2014 all Shellies (24h)",
+          "name": "Active power — all Shellies",
           "x": "0",
           "y": "5",
           "width": "72",
@@ -144,16 +144,6 @@
               "value": "5"
             },
             {
-              "type": "1",
-              "name": "time_period.from",
-              "value": "now-24h"
-            },
-            {
-              "type": "1",
-              "name": "time_period.to",
-              "value": "now"
-            },
-            {
               "type": "0",
               "name": "axisx",
               "value": "0"
@@ -182,7 +172,7 @@
         },
         {
           "type": "svggraph",
-          "name": "WiFi RSSI \u2014 all Shellies (7d)",
+          "name": "WiFi RSSI — all Shellies",
           "x": "0",
           "y": "10",
           "width": "36",
@@ -226,16 +216,6 @@
             },
             {
               "type": "1",
-              "name": "time_period.from",
-              "value": "now-7d"
-            },
-            {
-              "type": "1",
-              "name": "time_period.to",
-              "value": "now"
-            },
-            {
-              "type": "1",
               "name": "reference",
               "value": "SHRSS"
             },
@@ -258,7 +238,7 @@
         },
         {
           "type": "svggraph",
-          "name": "Temperature \u2014 all Shellies (7d)",
+          "name": "Temperature — all Shellies",
           "x": "36",
           "y": "10",
           "width": "36",
@@ -302,16 +282,6 @@
             },
             {
               "type": "1",
-              "name": "time_period.from",
-              "value": "now-7d"
-            },
-            {
-              "type": "1",
-              "name": "time_period.to",
-              "value": "now"
-            },
-            {
-              "type": "1",
               "name": "reference",
               "value": "SHTMP"
             },
@@ -334,7 +304,7 @@
         },
         {
           "type": "svggraph",
-          "name": "Energy total (30d)",
+          "name": "Energy total",
           "x": "0",
           "y": "15",
           "width": "72",
@@ -413,16 +383,6 @@
             },
             {
               "type": "1",
-              "name": "time_period.from",
-              "value": "now-30d"
-            },
-            {
-              "type": "1",
-              "name": "time_period.to",
-              "value": "now"
-            },
-            {
-              "type": "1",
               "name": "reference",
               "value": "SHNRG"
             },
@@ -440,6 +400,122 @@
               "type": "0",
               "name": "legend_lines",
               "value": "4"
+            }
+          ]
+        },
+        {
+          "type": "svggraph",
+          "name": "Energy consumption rate — all Shellies",
+          "x": "0",
+          "y": "20",
+          "width": "72",
+          "height": "5",
+          "view_mode": "0",
+          "fields": [
+            {
+              "type": "1",
+              "name": "ds.0.hosts.0",
+              "value": "shelly*"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.items.0",
+              "value": "*: Energy last minute"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.color",
+              "value": "43A047"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.type",
+              "value": "2"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.fill",
+              "value": "3"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.transparency",
+              "value": "5"
+            },
+            {
+              "type": "0",
+              "name": "ds.0.aggregate_function",
+              "value": "5"
+            },
+            {
+              "type": "1",
+              "name": "ds.0.aggregate_interval",
+              "value": "1h"
+            },
+            {
+              "type": "1",
+              "name": "ds.1.hosts.0",
+              "value": "shelly*"
+            },
+            {
+              "type": "1",
+              "name": "ds.1.items.0",
+              "value": "PM1: Energy last minute"
+            },
+            {
+              "type": "1",
+              "name": "ds.1.color",
+              "value": "FB8C00"
+            },
+            {
+              "type": "0",
+              "name": "ds.1.type",
+              "value": "2"
+            },
+            {
+              "type": "0",
+              "name": "ds.1.fill",
+              "value": "3"
+            },
+            {
+              "type": "0",
+              "name": "ds.1.transparency",
+              "value": "5"
+            },
+            {
+              "type": "0",
+              "name": "ds.1.aggregate_function",
+              "value": "5"
+            },
+            {
+              "type": "1",
+              "name": "ds.1.aggregate_interval",
+              "value": "1h"
+            },
+            {
+              "type": "1",
+              "name": "units",
+              "value": "Wh"
+            },
+            {
+              "type": "0",
+              "name": "legend",
+              "value": "1"
+            },
+            {
+              "type": "0",
+              "name": "legend_columns",
+              "value": "4"
+            },
+            {
+              "type": "0",
+              "name": "legend_lines",
+              "value": "4"
+            },
+            {
+              "type": "1",
+              "name": "reference",
+              "value": "SHRTG"
             }
           ]
         }

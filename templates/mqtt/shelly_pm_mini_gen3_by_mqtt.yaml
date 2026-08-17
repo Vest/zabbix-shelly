@@ -133,6 +133,23 @@ zabbix_export:
           tags:
             - tag: component
               value: energy
+        - uuid: 6ff71719b1a649178137256d44fc2b71
+          name: 'PM1: Energy last minute'
+          type: DEPENDENT
+          key: 'shelly.pm1.aenergy.by_minute'
+          value_type: FLOAT
+          units: Wh
+          description: 'Energy consumed in the last minute (aenergy.by_minute[0]). Use for consumption-rate graphs.'
+          master_item:
+            key: 'mqtt.get[{$SHELLY.SESSION},{$SHELLY.TOPIC}/status/pm1:0]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.aenergy.by_minute[0]'
+          tags:
+            - tag: component
+              value: energy
+
         - uuid: 2445b9310de54de2a5820a92716bedd7
           name: 'PM1: Returned energy total'
           type: DEPENDENT
