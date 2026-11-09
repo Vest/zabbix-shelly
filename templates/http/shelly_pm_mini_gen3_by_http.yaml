@@ -1,5 +1,5 @@
 zabbix_export:
-  version: '7.4'
+  version: '8.0'
   template_groups:
     - uuid: 9702754414644deba5cb4ed3e9f33594
       name: Templates/IoT
