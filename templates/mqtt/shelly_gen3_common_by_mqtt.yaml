@@ -48,7 +48,7 @@ zabbix_export:
           delay: '0'
           history: '0'
           trends: '0'
-          value_type: TEXT
+          value_type: JSON
           description: 'Master item: full JSON payload from status/sys. Dependents parse fields from this. No history (history=0) — it is a text blob only used to feed dependents. NOTE: sys publishes infrequently over MQTT (unlike pm1:0/switch:0), so do NOT use nodata() on sys-derived items for liveness — use the online (LWT) trigger instead.'
           tags:
             - tag: component
@@ -198,7 +198,7 @@ zabbix_export:
           delay: '0'
           history: '0'
           trends: '0'
-          value_type: TEXT
+          value_type: JSON
           description: 'Master item: full JSON payload from status/wifi. Published on change/reboot, not periodically, so dependents may be empty until the next WiFi state change.'
           tags:
             - tag: component
@@ -269,7 +269,7 @@ zabbix_export:
           delay: '0'
           history: '0'
           trends: '0'
-          value_type: TEXT
+          value_type: JSON
           description: 'Master item: full JSON payload from status/cloud, e.g. {"connected":true}. Published only on state CHANGE (not periodic, not retained), so may be empty until the next connect/disconnect event. Expected — not an error.'
           tags:
             - tag: component
@@ -301,7 +301,7 @@ zabbix_export:
           delay: '0'
           history: '0'
           trends: '0'
-          value_type: TEXT
+          value_type: JSON
           description: 'Master item: full JSON payload from status/mqtt, e.g. {"connected":true}. Change-only.'
           tags:
             - tag: component
@@ -333,7 +333,7 @@ zabbix_export:
           delay: '0'
           history: '0'
           trends: '0'
-          value_type: TEXT
+          value_type: JSON
           description: 'Master item: full JSON payload from status/ws, e.g. {"connected":false}. Change-only.'
           tags:
             - tag: component

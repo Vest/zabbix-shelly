@@ -40,7 +40,7 @@ zabbix_export:
           delay: '0'
           history: '0'
           trends: '0'
-          value_type: TEXT
+          value_type: JSON
           description: 'Master item: full JSON from status/switch:0. Dependents parse fields from this. No history (history=0) — it is a text blob only used to feed dependents.'
           tags:
             - tag: component

@@ -35,7 +35,7 @@ zabbix_export:
           delay: '0'
           history: '0'
           trends: '0'
-          value_type: TEXT
+          value_type: JSON
           description: 'Master item: full JSON from status/switch:0. Dependent items parse fields from this. Published on state change/reboot.'
           tags:
             - tag: component

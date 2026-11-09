@@ -53,7 +53,7 @@ zabbix_export:
           delay: '0'
           history: '0'
           trends: '0'
-          value_type: TEXT
+          value_type: JSON
           description: 'Master item: full JSON payload from status/pm1:0. Dependent items parse fields from this. No history (history=0) — it is a large text blob only used to feed dependents. {$SHELLY.SESSION}/{$SHELLY.TOPIC} are inherited from the linked common template.'
           tags:
             - tag: component
